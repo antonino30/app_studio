@@ -1,0 +1,158 @@
+[
+  {
+    "img": "img/paesaggio_invernale_con_chiesa.jpg",
+    "titoli": ["Paesaggio invernale con chiesa"],
+    "artista": "Caspar David Friedrich",
+    "data": "1811"
+  },
+   {
+    "img": "img/il_naufragio_della_speranza.jpg",
+    "titoli": ["il naufragio della speranza"],
+    "artista": "Caspar David Friedrich",
+    "data": "1823"
+  }, 
+  {
+    "img": "img/viandante_sul_mare_di_nebbia.jpg",
+    "titoli": ["viandante sul mare di nebbia"],
+    "artista": "Caspar David Friedrich",
+    "data": "1817"
+  }, 
+  {
+    "img": "img/due_uomini_che_contemplano_la_luna.jpg",
+    "titoli": ["due uomini che contemplano la luna"],
+    "artista": "Caspar David Friedrich",
+    "data": "1830"
+  }, 
+  {
+    "img": "img/wivenhoe_park.jpg",
+    "titoli": ["wivenhoe park"],
+    "artista": "John Constable",
+    "data": "1816"
+  }, 
+  {
+    "img": "img/abbazia_nel_querceto.jpg",
+    "titoli": ["abbazia nel querceto"],
+    "artista": "Caspar David Friedrich",
+    "data": "1810"
+  },
+  {
+    "img": "img/monaco_in_riva_al_mare.jpg",
+    "titoli": ["monaco in riva al mare"],
+    "artista": "Caspar David Friedrich",
+    "data": "1810"
+  },
+  {
+    "img": "img/la_cattedrale_di_salisbury.jpg",
+    "titoli": ["la cattedrale di salisbury"],
+    "artista": "John Constable",
+    "data": "1821"
+  },
+  {
+    "img": "img/la_cattedrale_di_salisbury_vista_dai_campi.jpg",
+    "titoli": ["la cattedrale di salisbury vista dai campi"],
+    "artista": "John Constable",
+    "data": "1831"
+  },
+{
+    "img": "img/l'incendio_della_camera_dei_lord_e_dei_comuni.jpg",
+    "titoli": ["l'incendio della camera dei lord e dei comuni"],
+    "artista": "William Turner",
+    "data": "1835"
+  },
+  {
+    "img": "img/pioggia_vapore_e_velocità.jpg",
+    "titoli": ["pioggia vapore e velocità"],
+    "artista": "William Turner",
+    "data": "1844"
+  },
+  {
+    "img": "img/tempesta_di_neve.jpg",
+    "titoli": ["tempesta di neve"],
+    "artista": "William Turner",
+    "data": "1842"
+  },
+   {
+    "img": "img/bacio_francese.jpg",
+    "titoli": ["bacio francese"],
+    "artista": "Francesco Hayez",
+    "data": "1859"
+  },
+  {
+    "img": "img/bacio_italiano.jpg",
+    "titoli": ["bacio italiano"],
+    "artista": "Francesco Hayez",
+    "data": "1861"
+  },
+  {
+    "img": "img/bacio_italiano_e_francese.jpg",
+    "titoli": ["bacio francese e italiano", "bacio italiano e francese"],
+    "artista": "Francesco Hayez",
+    "data": "1867"
+  },
+  {
+    "img": "img/la_barca_di_dante.jpg",
+    "titoli": ["la barca di dante"],
+    "artista": "Eugène Delacroix",
+    "data": "1822"
+  },
+  {
+    "img": "img/le_donne_di_Algeri_nei_loro_appartamenti.jpg",
+    "titoli": ["le donne di algeri nei loro appartamenti"],
+    "artista": "Eugène Delacroix",
+    "data": "1834"
+  },
+  {
+    "img": "img/la_libertà_che_guida_il_popolo.jpg",
+    "titoli": ["la libertà che guida il popolo"],
+    "artista": "Eugène Delacroix",
+    "data": "1830"
+  },
+  {
+    "img": "img/studio_di_cavallo_grigio.jpg",
+    "titoli": ["studio di cavallo grigio"],
+    "artista": "Théodore Géricault",
+    "data": "non si sa"
+  },
+  {
+    "img": "img/alienata_con_monomania_dell'invidia.jpg",
+    "titoli": ["alienata con monomania dell'invidia"],
+    "artista": "Théodore Géricault",
+    "data": "1822"
+  }, 
+  {
+    "img": "img/la_zattera_della_medusa.jpg",
+    "titoli": ["la zattera della medusa"],
+    "artista": "Théodore Géricault",
+    "data": "1819"
+  },
+  {
+    "img": "img/il_sonno_della_ragione_genera_mostri.jpg",
+    "titoli": ["il sonno della ragione genera mostri"],
+    "artista": "Francisco Goya",
+    "data": "1799"
+  },
+  {
+    "img": "img/la_famiglia_di_carlo_iv.jpg",
+    "titoli": ["la famiglia di carlo iv"],
+    "artista": "Francisco Goya",
+    "data": "1800"
+  },
+  {
+    "img": "img/la_fucilazione.jpg",
+    "titoli": ["la fucilazione"],
+    "artista": "Francisco Goya",
+    "data": "1814"
+  },
+  {
+    "img": "img/i_disastri_della_guerra.jpg",
+    "titoli": ["i disastri della guerra"],
+    "artista": "Francisco Goya",
+    "data": "1810"
+  },
+  {
+    "img": "img/i_capricci_del_1799.jpg",
+    "titoli": ["i capricci del 1799"],
+    "artista": "Francisco Goya",
+    "data": "1799"
+  }
+  ]

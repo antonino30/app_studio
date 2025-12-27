@@ -1,0 +1,436 @@
+:root{
+  --bg1:#0b1020;
+  --bg2:#0d1b2a;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:rgba(15,23,42,0.70);
+  --line:rgba(0,0,0,0.10);
+  --shadow: 0 18px 45px rgba(0,0,0,0.18);
+  --radius:20px;
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color:var(--text);
+  background: radial-gradient(1200px 600px at 20% 0%, #1f2a44 0%, transparent 60%),
+              radial-gradient(900px 500px at 80% 0%, #1b3a57 0%, transparent 55%),
+              linear-gradient(135deg, var(--bg1), var(--bg2));
+  min-height:100vh;
+}
+
+.wrap{
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 18px;
+  display: grid;
+  gap: 16px;
+}
+
+.card{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  backdrop-filter: blur(10px);
+}
+
+.header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 14px;
+}
+.header h1{
+  margin:0;
+  font-size: 26px;
+  letter-spacing: -0.3px;
+}
+.header p{
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.badge{
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(15,23,42,0.10);
+  border: 1px solid rgba(0,0,0,0.08);
+  font-weight: 900;
+}
+
+.gridBtns{
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 720px){
+  .gridBtns{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin: 10px 0;
+}
+
+.btn, .btnSmall, .btnPrimary{
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .08s ease, opacity .08s ease, box-shadow .08s ease;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  color: var(--text);
+}
+.btn:hover, .btnSmall:hover, .btnPrimary:hover{
+  transform: translateY(-1px);
+}
+.btn:active, .btnSmall:active, .btnPrimary:active{
+  transform: translateY(0px);
+  opacity: 0.92;
+}
+
+.btnPrimary{
+  background: #111827;
+  color: #fff;
+  border: 0;
+  box-shadow: 0 10px 25px rgba(17,24,39,0.25);
+}
+
+.btnSmall{
+  padding: 10px 12px;
+  border-radius: 12px;
+}
+
+.imgBox{
+  width:100%;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+  overflow: hidden;
+  margin-top: 12px;
+}
+.imgBox img{
+  display:block;
+  width:100%;
+  height: 280px;
+  object-fit: cover;
+}
+@media (max-width: 520px){
+  .imgBox img{ height: 220px; }
+}
+
+.inputs{
+  margin-top: 12px;
+  display:grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 720px){
+  .inputs{ grid-template-columns: 1fr; }
+}
+.input{
+  display:flex;
+  flex-direction:column;
+  gap: 6px;
+}
+.input span{
+  font-weight: 900;
+  color: rgba(15,23,42,0.85);
+}
+.input input{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.18);
+  outline:none;
+  font-size: 15px;
+  color: #111827;
+  background: #fff;
+}
+.input input::placeholder{
+  color: rgba(17,24,39,0.55);
+}
+
+.out{
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(15,23,42,0.06);
+  border: 1px solid rgba(0,0,0,0.08);
+  white-space: pre-line;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* ======= FILTRI ARTE ======= */
+.filters{
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.10);
+}
+
+.filtersTop{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap: wrap;
+}
+
+.searchBox{
+  flex: 1;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  min-width: 240px;
+}
+.searchBox .icon{ opacity: .7; }
+.searchBox input{
+  border:0;
+  outline:none;
+  width:100%;
+  font-size: 15px;
+  color:#111827;
+  background: transparent;
+}
+.searchBox input::placeholder{ color: rgba(17,24,39,0.55); }
+
+.filtersBtns{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.artList{
+  margin-top: 10px;
+  max-height: 230px;
+  overflow:auto;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 16px;
+  padding: 8px;
+  background: #fff;
+}
+.artRow{
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  padding: 10px 10px;
+  margin: 6px 0;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: #fff;
+  cursor:pointer;
+  user-select:none;
+}
+.artRow:hover{
+  background: rgba(17,24,39,0.05);
+  border-color: rgba(0,0,0,0.12);
+}
+.artRow.isSelected{
+  background: rgba(17,24,39,0.08);
+  border-color: rgba(17,24,39,0.28);
+}
+.artRow input[type="checkbox"]{
+  width: 18px;
+  height: 18px;
+  accent-color: #111827;
+}
+.artMeta{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.artTitle{
+  font-weight: 950;
+  color:#111827;
+}
+.artSub{
+  font-size: 13px;
+  color: rgba(17,24,39,0.82);
+}
+
+.artInfo{
+  margin-top: 10px;
+  font-weight: 800;
+  color: rgba(17,24,39,0.80);
+}
+
+/* ======= MATEMATICA ======= */
+.mathBox{
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: #fff;
+}
+.mathLabel{
+  font-weight: 900;
+  color: rgba(17,24,39,0.75);
+  margin-bottom: 8px;
+}
+.mathExpr{
+  font-size: 22px;
+  font-weight: 950;
+  color:#111827;
+  letter-spacing: 0.2px;
+}
+
+/* ======= TECNOLOGIA ======= */
+.tecText{
+  margin-top: 10px;
+  white-space: pre-line;
+  font-size: 18px;
+  font-weight: 800;
+  color:#111827;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(15,23,42,0.05);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+.btnGeo{
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 25px rgba(34,197,94,0.35);
+}
+.btnGeo:hover{
+  opacity: 0.95;
+}
+.calc{
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+}
+.calc input{
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 10px;
+  text-align: right;
+}
+.calcGrid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.calcGrid button{
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 900;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.15);
+  background: #f8fafc;
+  cursor:pointer;
+}
+.calcGrid button:hover{
+  background:#e5e7eb;
+}
+.calcEq{
+  grid-column: span 4;
+  background:#111827;
+  color:white;
+}
+.btnMat{
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color:white;
+  border:none;
+  box-shadow: 0 10px 25px rgba(239,68,68,0.4);
+}
+
+.btnTec{
+  background: linear-gradient(135deg, #facc15, #fde047);
+  color:#111827;
+  border:none;
+  box-shadow: 0 10px 25px rgba(250,204,21,0.45);
+}
+
+.btnSto{
+  background: linear-gradient(135deg, #92400e, #b45309);
+  color:white;
+  border:none;
+  box-shadow: 0 10px 25px rgba(146,64,14,0.45);
+}
+
+.btnArte{
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color:white;
+  border:none;
+  box-shadow: 0 10px 25px rgba(59,130,246,0.45);
+}
+.mapBox{
+  margin-top: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: #fff;
+  overflow: hidden;
+}
+#mapSvg{
+  width: 100%;
+  height: 320px;
+}
+#mapSvg rect{
+  fill: rgba(17,24,39,0.08);
+  stroke: rgba(0,0,0,0.25);
+  stroke-width: 2;
+  cursor: pointer;
+  transition: transform .08s ease, fill .08s ease;
+}
+#mapSvg rect:hover{
+  transform: scale(1.01);
+  fill: rgba(17,24,39,0.14);
+}
+#mapSvg text{
+  font-weight: 900;
+  fill: rgba(17,24,39,0.75);
+  user-select:none;
+  pointer-events:none;
+}
+.correctArea{ fill: rgba(34,197,94,0.35) !important; }
+.wrongArea{ fill: rgba(239,68,68,0.35) !important; }
+.btnGeog{
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 25px rgba(56,189,248,0.45);
+}
+.selectLike{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.18);
+  font-weight: 900;
+  background: #fff;
+}
+/* Geografia azzurro */
+.btnGeog{
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 25px rgba(56,189,248,0.45);
+}
+
+/* Arte marrone */
+.btnArte{
+  background: linear-gradient(135deg, #7c2d12, #b45309);
+  color: white;
+  border: none;
+  box-shadow: 0 10px 25px rgba(180,83,9,0.45);
+}

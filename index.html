@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>App Studio</title>
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- piccole correzioni per vedere bene le immagini di ARTE -->
+  <style>
+    .imgBox { width: 100%; height: 320px; display:flex; align-items:center; justify-content:center; }
+    .imgBox img { width:100%; height:100%; object-fit: contain; background: white; border-radius: 14px; }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <!-- HOME -->
+    <section id="screenHome" class="card">
+      <header class="header">
+        <div>
+          <h1>App Studio</h1>
+          <p>Scegli una materia e allenati con domande casuali.</p>
+        </div>
+        <div class="badge">Nino</div>
+      </header>
+
+      <div class="gridBtns">
+        <button class="btn btnArte" id="goArte">Arte</button>
+        <button class="btn btnMat" id="goMat">Matematica</button>
+        <button class="btn btnTec" id="goTec">Tecnologia</button>
+        <button class="btn btnGeo" id="goGeo">Geometria</button>
+        <button class="btn btnGeog" id="goGeog">Geografia</button>
+        <button class="btn" id="goMus">Musica</button>
+      </div>
+
+      <pre id="homeMsg" class="out"></pre>
+    </section>
+
+    <!-- ARTE -->
+    <section id="screenArte" class="card" style="display:none;">
+      <header class="header">
+        <div>
+          <h1>Arte</h1>
+          <p>Indovina titolo, artista e data guardando solo l’immagine.</p>
+        </div>
+        <div class="badge">Quiz</div>
+      </header>
+
+      <div class="row">
+        <button class="btn" id="backHomeArte">(Indietro)</button>
+        <button class="btnPrimary" id="btnStart">Inizia</button>
+        <button class="btn" id="btnNext">Prossima</button>
+      </div>
+
+      <!-- FILTRI ARTE -->
+      <section class="filters">
+        <div class="filtersTop">
+          <div class="searchBox">
+            <span class="icon">🔎</span>
+            <input id="artSearch" placeholder="Cerca (es. gioconda, van gogh, monet)" />
+          </div>
+
+          <div class="filtersBtns">
+            <button id="artSelAll" class="btnSmall" type="button">Tutti</button>
+            <button id="artSelNone" class="btnSmall" type="button">Nessuno</button>
+            <button id="artApply" class="btnPrimary" type="button">Applica</button>
+          </div>
+        </div>
+
+        <div id="artList" class="artList"></div>
+        <div id="artInfo" class="artInfo"></div>
+      </section>
+
+      <div class="imgBox">
+        <img id="artImg" alt="opera" />
+      </div>
+
+      <div class="inputs">
+        <div class="input">
+          <span>Titolo</span>
+          <input id="inTitolo" placeholder="Scrivi il titolo">
+        </div>
+        <div class="input">
+          <span>Artista</span>
+          <input id="inArtista" placeholder="Scrivi l’artista">
+        </div>
+        <div class="input">
+          <span>Data</span>
+          <input id="inData" placeholder="Es. 1889">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btnPrimary" id="btnCheck">Controlla</button>
+      </div>
+
+      <pre id="out" class="out"></pre>
+    </section>
+
+    <!-- MATEMATICA -->
+    <section id="screenMat" class="card" style="display:none;">
+      <header class="header">
+        <div>
+          <h1>Matematica</h1>
+          <p>Risolvi l’espressione.</p>
+        </div>
+        <div class="badge">Math</div>
+      </header>
+
+      <div class="row">
+        <button class="btn" id="backHomeMat">(Indietro)</button>
+        <button class="btnPrimary" id="btnNewMath">Nuova espressione</button>
+      </div>
+
+      <div class="mathBox">
+        <div class="mathLabel">Espressione</div>
+        <div id="mathExpr" class="mathExpr">(premi Nuova espressione)</div>
+      </div>
+
+      <div class="inputs">
+        <div class="input">
+          <span>Risultato</span>
+          <input id="mathAns" placeholder="Scrivi il risultato (virgola o punto)">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btnPrimary" id="btnCheckMath">Controlla</button>
+      </div>
+
+      <!-- CALCOLATRICE (MAT) -->
+      <div class="calc">
+        <input id="calcDisplayMat" placeholder="Calcolatrice" readonly>
+        <div class="calcGrid">
+          <button onclick="calcAppend('calcDisplayMat','7')">7</button>
+          <button onclick="calcAppend('calcDisplayMat','8')">8</button>
+          <button onclick="calcAppend('calcDisplayMat','9')">9</button>
+          <button onclick="calcAppend('calcDisplayMat','/')">÷</button>
+
+          <button onclick="calcAppend('calcDisplayMat','4')">4</button>
+          <button onclick="calcAppend('calcDisplayMat','5')">5</button>
+          <button onclick="calcAppend('calcDisplayMat','6')">6</button>
+          <button onclick="calcAppend('calcDisplayMat','*')">×</button>
+
+          <button onclick="calcAppend('calcDisplayMat','1')">1</button>
+          <button onclick="calcAppend('calcDisplayMat','2')">2</button>
+          <button onclick="calcAppend('calcDisplayMat','3')">3</button>
+          <button onclick="calcAppend('calcDisplayMat','-')">−</button>
+
+          <button onclick="calcAppend('calcDisplayMat','0')">0</button>
+          <button onclick="calcAppend('calcDisplayMat','.')">.</button>
+          <button onclick="calcClear('calcDisplayMat')">C</button>
+          <button onclick="calcAppend('calcDisplayMat','+')">+</button>
+
+          <button class="calcEq" onclick="calcEq('calcDisplayMat')">=</button>
+        </div>
+      </div>
+
+      <pre id="mathOut" class="out"></pre>
+    </section>
+
+    <!-- GEOMETRIA -->
+    <section id="screenGeo" class="card" style="display:none;">
+      <header class="header">
+        <div>
+          <h1>Geometria</h1>
+          <p>Risolvi il problema (senza procedimento).</p>
+        </div>
+        <div class="badge">Geo</div>
+      </header>
+
+      <div class="row">
+        <button class="btn" id="backHomeGeo">(Indietro)</button>
+        <button class="btnPrimary" id="btnNewGeo">Nuovo problema</button>
+      </div>
+
+      <div id="geoText" class="tecText"></div>
+
+      <div class="inputs">
+        <div class="input">
+          <span>Risposta</span>
+          <input id="geoAns" placeholder="Scrivi il risultato">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btnPrimary" id="btnCheckGeo">Controlla</button>
+      </div>
+
+      <!-- CALCOLATRICE (GEO) -->
+      <div class="calc">
+        <input id="calcDisplayGeo" placeholder="Calcolatrice" readonly>
+        <div class="calcGrid">
+          <button onclick="calcAppend('calcDisplayGeo','7')">7</button>
+          <button onclick="calcAppend('calcDisplayGeo','8')">8</button>
+          <button onclick="calcAppend('calcDisplayGeo','9')">9</button>
+          <button onclick="calcAppend('calcDisplayGeo','/')">÷</button>
+
+          <button onclick="calcAppend('calcDisplayGeo','4')">4</button>
+          <button onclick="calcAppend('calcDisplayGeo','5')">5</button>
+          <button onclick="calcAppend('calcDisplayGeo','6')">6</button>
+          <button onclick="calcAppend('calcDisplayGeo','*')">×</button>
+
+          <button onclick="calcAppend('calcDisplayGeo','1')">1</button>
+          <button onclick="calcAppend('calcDisplayGeo','2')">2</button>
+          <button onclick="calcAppend('calcDisplayGeo','3')">3</button>
+          <button onclick="calcAppend('calcDisplayGeo','-')">−</button>
+
+          <button onclick="calcAppend('calcDisplayGeo','0')">0</button>
+          <button onclick="calcAppend('calcDisplayGeo','.')">.</button>
+          <button onclick="calcClear('calcDisplayGeo')">C</button>
+          <button onclick="calcAppend('calcDisplayGeo','+')">+</button>
+
+          <button class="calcEq" onclick="calcEq('calcDisplayGeo')">=</button>
+        </div>
+      </div>
+
+      <pre id="geoOut" class="out"></pre>
+    </section>
+
+    <!-- TECNOLOGIA -->
+    <section id="screenTec" class="card" style="display:none;">
+      <header class="header">
+        <div>
+          <h1>Tecnologia</h1>
+          <p>Legge di Ohm: dati 2 valori, trova il terzo.</p>
+        </div>
+        <div class="badge">Ohm</div>
+      </header>
+
+      <div class="row">
+        <button class="btn" id="backHomeTec">(Indietro)</button>
+        <button class="btnPrimary" id="btnNewTec">Nuovo problema</button>
+      </div>
+
+      <div class="imgBox">
+        <img id="tecImg" alt="circuito" />
+      </div>
+
+      <div id="tecText" class="tecText"></div>
+
+      <div class="inputs">
+        <div class="input">
+          <span>Risposta</span>
+          <input id="tecAns" placeholder="Scrivi il valore (es. 2 oppure 2.5)">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btnPrimary" id="btnCheckTec">Controlla</button>
+      </div>
+
+      <!-- CALCOLATRICE (TEC) -->
+      <div class="calc">
+        <input id="calcDisplayTec" placeholder="Calcolatrice" readonly>
+        <div class="calcGrid">
+          <button onclick="calcAppend('calcDisplayTec','7')">7</button>
+          <button onclick="calcAppend('calcDisplayTec','8')">8</button>
+          <button onclick="calcAppend('calcDisplayTec','9')">9</button>
+          <button onclick="calcAppend('calcDisplayTec','/')">÷</button>
+
+          <button onclick="calcAppend('calcDisplayTec','4')">4</button>
+          <button onclick="calcAppend('calcDisplayTec','5')">5</button>
+          <button onclick="calcAppend('calcDisplayTec','6')">6</button>
+          <button onclick="calcAppend('calcDisplayTec','*')">×</button>
+
+          <button onclick="calcAppend('calcDisplayTec','1')">1</button>
+          <button onclick="calcAppend('calcDisplayTec','2')">2</button>
+          <button onclick="calcAppend('calcDisplayTec','3')">3</button>
+          <button onclick="calcAppend('calcDisplayTec','-')">−</button>
+
+          <button onclick="calcAppend('calcDisplayTec','0')">0</button>
+          <button onclick="calcAppend('calcDisplayTec','.')">.</button>
+          <button onclick="calcClear('calcDisplayTec')">C</button>
+          <button onclick="calcAppend('calcDisplayTec','+')">+</button>
+
+          <button class="calcEq" onclick="calcEq('calcDisplayTec')">=</button>
+        </div>
+      </div>
+
+      <pre id="tecOut" class="out"></pre>
+    </section>
+
+    <!-- GEOGRAFIA -->
+    <section id="screenGeog" class="card" style="display:none;">
+      <header class="header">
+        <div>
+          <h1>Geografia (Africa)</h1>
+          <p>Domande casuali: Stato ↔ Capitale.</p>
+        </div>
+        <div class="badge">Geo</div>
+      </header>
+
+      <div class="row">
+        <button class="btn" id="backHomeGeog">(Indietro)</button>
+        <button class="btnPrimary" id="btnNewGeog">Nuova domanda</button>
+      </div>
+
+      <div id="geogText" class="tecText">Premi “Nuova domanda”.</div>
+
+      <div class="inputs">
+        <div class="input">
+          <span>Risposta</span>
+          <input id="geogAns" placeholder="Scrivi la risposta">
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btnPrimary" id="btnCheckGeog">Controlla</button>
+      </div>
+
+      <pre id="geogOut" class="out"></pre>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
