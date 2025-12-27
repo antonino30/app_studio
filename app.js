@@ -224,117 +224,355 @@ function checkArte() {
 }
 
 // ======================
-// MATEMATICA
+// MATEMATICA (DIFFICILE: MONOMI + RADICI + FRAZIONI + POTENZE)
+// Risultato finale: un monomio in x (es: 6x^4, -3/2x^2, 5x, 12)
 // ======================
-let soluzioneMath = null;
+let soluzioneMath = { coef: 0, exp: 0 }; // coef * x^exp
 
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a || 1;
+}
+
+function fracNorm(num, den) {
+  if (den < 0) { den = -den; num = -num; }
+  const g = gcd(num, den);
+  return { num: num / g, den: den / g };
+}
+
+// monomio come frazione * x^exp
+function mono(num, den, exp) {
+  const f = fracNorm(num, den);
+  return { num: f.num, den: f.den, exp };
+}
+
+function monoMul(a, b) {
+  return mono(a.num * b.num, a.den * b.den, a.exp + b.exp);
+}
+
+function monoDiv(a, b) {
+  return mono(a.num * b.den, a.den * b.num, a.exp - b.exp);
+}
+
+function monoPow(a, k) {
+  // k intero >=0
+  return mono(a.num ** k, a.den ** k, a.exp * k);
+}
+
+function monoToFloat(m) {
+  return (m.num / m.den);
+}
+
+function monoToAnswer(m) {
+  // forma leggibile: -3/2x^2, 5x, 12
+  const num = m.num, den = m.den, e = m.exp;
+
+  let cStr = "";
+  if (den === 1) cStr = `${num}`;
+  else cStr = `${num}/${den}`;
+
+  if (e === 0) return cStr;
+
+  // coefficienti 1 e -1: scrivi solo x...
+  if (num === 1 && den === 1) cStr = "";
+  if (num === -1 && den === 1) cStr = "-";
+
+  if (e === 1) return `${cStr}x`;
+  return `${cStr}x^${e}`;
+}
+
+// parser risposta utente: accetta 6x^4, -3/2x^2, 1.5x, x^3, -x, 12
+function parseUserMonomial(s) {
+  if (!s) return null;
+  s = s.toLowerCase().trim();
+  s = s.replace(/\s+/g, "");
+
+  // sostituisci eventuale simbolo × o ·
+  s = s.replace(/[×·]/g, "*");
+
+  // se contiene x
+  const hasX = s.includes("x");
+  let coefStr = "";
+  let exp = 0;
+
+  if (!hasX) {
+    // solo numero
+    coefStr = s;
+    exp = 0;
+  } else {
+    // split su x
+    const parts = s.split("x");
+    coefStr = parts[0]; // prima della x
+    const after = parts[1] ?? "";
+
+    // coefficiente
+    if (coefStr === "" || coefStr === "+") coefStr = "1";
+    if (coefStr === "-") coefStr = "-1";
+
+    // esponente
+    if (after === "") exp = 1;
+    else if (after.startsWith("^")) {
+      exp = parseInt(after.slice(1), 10);
+      if (!Number.isFinite(exp)) return null;
+    } else {
+      // roba strana
+      return null;
+    }
+  }
+
+  // coefficiente può essere frazione o decimale
+  let num = 0, den = 1;
+
+  if (coefStr.includes("/")) {
+    const [a, b] = coefStr.split("/");
+    num = parseInt(a, 10);
+    den = parseInt(b, 10);
+    if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+    const f = fracNorm(num, den);
+    num = f.num; den = f.den;
+  } else {
+    // decimale -> trasformo in frazione (semplice)
+    const val = Number(coefStr.replace(",", "."));
+    if (!Number.isFinite(val)) return null;
+
+    // porta a frazione con max 3 decimali
+    const scaled = Math.round(val * 1000);
+    const f = fracNorm(scaled, 1000);
+    num = f.num; den = f.den;
+  }
+
+  return { num, den, exp };
+}
+
+// confronto con tolleranza (anche se scrivi 0.001 diverso)
+function sameMonomial(user, sol) {
+  if (!user) return false;
+  if (user.exp !== sol.exp) return false;
+
+  // confronto coefficienti come float con piccola tolleranza
+  const u = user.num / user.den;
+  const s = sol.num / sol.den;
+  return Math.abs(u - s) < 1e-6;
+}
+
+// genera problemi “quasi mai uguali”
 function nuovaEspressione() {
-  const tipo = rInt(1, 12);
+  // scegli un template difficile
+  const tipo = rInt(1, 18);
   let expr = "";
-  let result = 0;
+  let sol = mono(1, 1, 0);
+
+  // helper casual
+  const c = () => rInt(2, 12);          // coeff
+  const e = () => rInt(1, 5);           // exp
+  const sq = (n) => n * n;
+
+  // creo monomi random “puliti”
+  const M = (coef, exp) => mono(coef, 1, exp);
 
   switch (tipo) {
+
+    // 1) (ax^m · bx^n) / (cx^k)
     case 1: {
-      const a = rInt(6, 18), b = rInt(2, 12);
-      const c = rInt(3, 10), d = rInt(2, 9);
-      expr = `(${a} − ${b}) · (${c} + ${d})`;
-      result = (a - b) * (c + d);
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e(), k = rInt(1, 4);
+      expr = `( ${a}x^${m} · ${b}x^${n} ) ÷ ( ${cc}x^${k} )`;
+      sol = monoMul(M(a, m), M(b, n));
+      sol = monoDiv(sol, M(cc, k));
       break;
     }
+
+    // 2) (ax^m / bx^n) · (cx^k)
     case 2: {
-      const a = rInt(2, 9), b = rInt(2, 9);
-      const c = rInt(2, 8);
-      expr = `(${a}/${b}) · ${c}`;
-      result = (a / b) * c;
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = rInt(1, 4), k = e();
+      expr = `( ${a}x^${m} ÷ ${b}x^${n} ) · ( ${cc}x^${k} )`;
+      sol = monoDiv(M(a, m), M(b, n));
+      sol = monoMul(sol, M(cc, k));
       break;
     }
+
+    // 3) ((ax^m)^2 · (bx^n)) / (cx^k)
     case 3: {
-      const a = rInt(10, 30), b = rInt(2, 9), c = rInt(2, 9);
-      expr = `${a} − (${b} · ${c})`;
-      result = a - (b * c);
+      const a = c(), b = c(), cc = c();
+      const m = rInt(1, 4), n = e(), k = rInt(1, 4);
+      expr = `( (${a}x^${m})^2 · ${b}x^${n} ) ÷ ( ${cc}x^${k} )`;
+      sol = monoPow(M(a, m), 2);
+      sol = monoMul(sol, M(b, n));
+      sol = monoDiv(sol, M(cc, k));
       break;
     }
+
+    // 4) √(p^2 x^(2n)) · (ax^m)  (radice perfetta)
     case 4: {
-      const a = rInt(2, 12), b = rInt(2, 12), c = rInt(2, 6);
-      expr = `(${a} + ${b}) ÷ ${c}`;
-      result = (a + b) / c;
+      const p = c();
+      const n = rInt(1, 4);
+      const a = c(), m = e();
+      expr = `√(${sq(p)}x^${2*n}) · (${a}x^${m})`;
+      sol = monoMul(M(p, n), M(a, m));
       break;
     }
+
+    // 5) (ax^m + bx^m) · cx^k   (somma di monomi simili -> ancora monomio)
     case 5: {
-      const x = rInt(3, 15);
-      const y = rInt(2, 12);
-      expr = `√(${x * x}) + ${y}`;
-      result = x + y;
+      const a = c(), b = c(), cc = c();
+      const m = e(), k = e();
+      expr = `( ${a}x^${m} + ${b}x^${m} ) · ${cc}x^${k}`;
+      const sumCoef = a + b;
+      sol = monoMul(M(sumCoef, m), M(cc, k));
       break;
     }
+
+    // 6) (ax^m − bx^m) ÷ cx^k
     case 6: {
-      const a = rInt(2, 10), b = rInt(2, 10);
-      expr = `(${a} + ${b})²`;
-      result = (a + b) ** 2;
+      const a = rInt(10, 30), b = rInt(2, 9), cc = c();
+      const m = e(), k = rInt(1, 4);
+      expr = `( ${a}x^${m} − ${b}x^${m} ) ÷ ${cc}x^${k}`;
+      const diffCoef = a - b;
+      sol = monoDiv(M(diffCoef, m), M(cc, k));
       break;
     }
+
+    // 7) (ax^m · bx^n) / ( (cx^k)^2 )
     case 7: {
-      const a = rInt(10, 40), b = rInt(2, 9), c = rInt(2, 9);
-      const d = rInt(2, 8);
-      expr = `(${a} − (${b} + ${c})) · ${d}`;
-      result = (a - (b + c)) * d;
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e(), k = rInt(1, 4);
+      expr = `( ${a}x^${m} · ${b}x^${n} ) ÷ ( (${cc}x^${k})^2 )`;
+      sol = monoDiv(monoMul(M(a,m), M(b,n)), monoPow(M(cc,k), 2));
       break;
     }
+
+    // 8) (ax^m / b) · (cx^n / d)  (frazioni)
     case 8: {
-      const a = rInt(1, 9), b = rInt(2, 10);
-      const c = rInt(1, 9), d = rInt(2, 10);
-      expr = `(${a}/${b}) ÷ (${c}/${d})`;
-      result = (a / b) / (c / d);
+      const a = c(), b = rInt(2, 9), cc = c(), d = rInt(2, 9);
+      const m = e(), n = e();
+      expr = `( ${a}x^${m} ÷ ${b} ) · ( ${cc}x^${n} ÷ ${d} )`;
+      sol = monoMul(mono(a, b, m), mono(cc, d, n));
       break;
     }
+
+    // 9) (a/b x^m) ÷ (c/d x^n)
     case 9: {
-      const a = rInt(2, 9), b = rInt(2, 9), c = rInt(2, 9);
-      expr = `(${a} + ${b}) · (${c} − ${a}) + ${b}`;
-      result = (a + b) * (c - a) + b;
+      const a = c(), b = rInt(2, 9), cc = c(), d = rInt(2, 9);
+      const m = e(), n = e();
+      expr = `( (${a}/${b})x^${m} ) ÷ ( (${cc}/${d})x^${n} )`;
+      sol = monoDiv(mono(a,b,m), mono(cc,d,n));
       break;
     }
+
+    // 10) (ax^m)^3 ÷ (bx^n)
     case 10: {
-      const a = rInt(2, 8), b = rInt(2, 8);
-      const c = rInt(2, 8), d = rInt(2, 8);
-      expr = `(${a} · ${b}) + (${c} · ${d})`;
-      result = (a * b) + (c * d);
+      const a = c(), b = c();
+      const m = rInt(1, 3), n = e();
+      expr = `( ${a}x^${m} )^3 ÷ ( ${b}x^${n} )`;
+      sol = monoDiv(monoPow(M(a,m), 3), M(b,n));
       break;
     }
+
+    // 11) √( (a^2) ) · x^m  -> solo coeff * x^m
     case 11: {
-      const a = rInt(8, 20), b = rInt(2, 9);
-      const c = rInt(2, 8), d = rInt(2, 10);
-      expr = `(${a} ÷ ${b}) + (${c} · ${d})`;
-      result = (a / b) + (c * d);
+      const a = c(), m = e();
+      expr = `√(${a*a}) · x^${m}`;
+      sol = M(a, m);
       break;
     }
+
+    // 12) (ax^m)(bx^n) + (cx^(m+n))  -> somma di simili dopo prodotto
     case 12: {
-      const a = rInt(5, 20), b = rInt(1, 12);
-      const c = rInt(10, 25), d = rInt(1, 9);
-      expr = `((${a} + ${b}) ÷ (${c} − ${d}))`;
-      result = (a + b) / (c - d);
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e();
+      expr = `( ${a}x^${m} · ${b}x^${n} ) + ( ${cc}x^${m+n} )`;
+      const prodCoef = a*b;
+      const sumCoef = prodCoef + cc;
+      sol = M(sumCoef, m+n);
+      break;
+    }
+
+    // 13) (ax^m)(bx^n) − (cx^(m+n))
+    case 13: {
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e();
+      expr = `( ${a}x^${m} · ${b}x^${n} ) − ( ${cc}x^${m+n} )`;
+      const prodCoef = a*b;
+      const diffCoef = prodCoef - cc;
+      sol = M(diffCoef, m+n);
+      break;
+    }
+
+    // 14) ( (ax^m + bx^m) / c ) · x^k
+    case 14: {
+      const a = c(), b = c(), cc = rInt(2, 9);
+      const m = e(), k = e();
+      expr = `( (${a}x^${m} + ${b}x^${m}) ÷ ${cc} ) · x^${k}`;
+      sol = monoMul(mono(a+b, cc, m), M(1, k));
+      break;
+    }
+
+    // 15) (ax^m) / (b x^n) / (c x^k)
+    case 15: {
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e(), k = e();
+      expr = `${a}x^${m} ÷ ${b}x^${n} ÷ ${cc}x^${k}`;
+      sol = monoDiv(M(a,m), M(b,n));
+      sol = monoDiv(sol, M(cc,k));
+      break;
+    }
+
+    // 16) (ax^m)^2 + (bx^(2m))  -> simili
+    case 16: {
+      const a = c(), b = c();
+      const m = rInt(1, 4);
+      expr = `( ${a}x^${m} )^2 + ${b}x^${2*m}`;
+      const coef = a*a + b;
+      sol = M(coef, 2*m);
+      break;
+    }
+
+    // 17) √( (p^2) ) · (a/b x^m)
+    case 17: {
+      const p = c();
+      const a = c(), b = rInt(2, 9), m = e();
+      expr = `√(${p*p}) · ( (${a}/${b})x^${m} )`;
+      sol = monoMul(M(p,0), mono(a,b,m));
+      break;
+    }
+
+    // 18) (ax^m)(bx^n) / (cx^(m+n-1))  -> risultato x^1
+    case 18: {
+      const a = c(), b = c(), cc = c();
+      const m = e(), n = e();
+      const k = m+n-1;
+      expr = `( ${a}x^${m} · ${b}x^${n} ) ÷ ( ${cc}x^${k} )`;
+      sol = monoDiv(monoMul(M(a,m), M(b,n)), M(cc,k));
       break;
     }
   }
 
-  soluzioneMath = result;
+  // normalizza risultato finale
+  soluzioneMath = sol;
+
   document.getElementById("mathExpr").textContent = expr;
   document.getElementById("mathAns").value = "";
-  document.getElementById("mathOut").textContent = "Scrivi il risultato finale (virgola o punto).";
+  document.getElementById("mathOut").textContent =
+    "Scrivi il risultato semplificato come monomio (es: 6x^4, -3/2x^2, 5x, 12).";
 }
 
 function checkMath() {
-  const raw = document.getElementById("mathAns").value.trim().replace(",", ".");
-  const num = parseFloat(raw);
+  const raw = document.getElementById("mathAns").value;
+  const user = parseUserMonomial(raw);
 
-  if (Number.isNaN(num)) {
-    document.getElementById("mathOut").textContent = "Inserisci un numero valido.";
+  if (!user) {
+    document.getElementById("mathOut").textContent =
+      "Inserisci una risposta valida (es: 6x^4, -3/2x^2, 5x, 12).";
     return;
   }
 
-  if (Math.abs(num - soluzioneMath) < 1e-9) {
+  if (sameMonomial(user, soluzioneMath)) {
     document.getElementById("mathOut").textContent = "✅ Corretto!";
   } else {
-    document.getElementById("mathOut").textContent = `❌ Sbagliato\nRisultato corretto: ${soluzioneMath}`;
+    document.getElementById("mathOut").textContent =
+      `❌ Sbagliato\nRisposta corretta: ${monoToAnswer(soluzioneMath)}`;
   }
 }
 
@@ -663,3 +901,4 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
