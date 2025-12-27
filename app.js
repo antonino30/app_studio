@@ -914,12 +914,16 @@ document.addEventListener("DOMContentLoaded", () => {
     showScreen("geog");
     nuovaDomandaGeog();
   });
-
-  // Musica placeholder
   document.getElementById("goMus").addEventListener("click", () => {
-    document.getElementById("homeMsg").textContent = "Musica (in costruzione)";
-  });
+  showScreen("mus");
+  nuovoBrano();
+});
 
+document.getElementById("backHomeMus").addEventListener("click", () => showScreen("home"));
+document.getElementById("btnNewMus").addEventListener("click", nuovoBrano);
+document.getElementById("btnCheckMus").addEventListener("click", checkMusica);
+
+caricaMusica()
   // back
   document.getElementById("backHomeArte").addEventListener("click", () => showScreen("home"));
   document.getElementById("backHomeMat").addEventListener("click", () => showScreen("home"));
@@ -966,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
 
 
 
