@@ -1,23 +1,23 @@
 [
   {
-    "file": "audio/interstellar.mp3",
-    "titolo": "Interstellar Main Theme",
-    "autore": "Hans Zimmer",
-    "strumenti": ["organo", "archi", "sintetizzatore"],
-    "film": "Interstellar"
+    "file": "audio/my_favorite_things.mp3",
+    "titolo": "my favourite things",
+    "autore": "j. coltrane",
+    "strumenti": ["sassofono", "batteria", "contrabbasso"],
+    "film": "tutti insieme appassionatamente"
   },
   {
-    "file": "audio/pirates.mp3",
-    "titolo": "He's a Pirate",
-    "autore": "Hans Zimmer",
-    "strumenti": ["archi", "ottoni", "percussioni"],
-    "film": "Pirati dei Caraibi"
+    "file": "audio/take_five.mp3",
+    "titolo": "take five",
+    "autore": "Dave Brubecks",
+    "strumenti": ["sassofono"],
+    "film": "take five"
   },
   {
-    "file": "audio/cinema_paradiso.mp3",
-    "titolo": "Love Theme",
-    "autore": "Ennio Morricone",
-    "strumenti": ["archi", "pianoforte"],
-    "film": "Nuovo Cinema Paradiso"
+    "file": "audio/maple_leaf_rag.mp3",
+    "titolo": "maple leaf rag",
+    "autore": "Scott Joplin",
+    "strumenti": ["piano"],
+    "film": "la stangata"
   }
 ]
