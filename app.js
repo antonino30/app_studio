@@ -1012,7 +1012,14 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("backHomeMus").addEventListener("click", () => showScreen("home"));
 document.getElementById("btnNewMus").addEventListener("click", nuovoBrano);
 document.getElementById("btnCheckMus").addEventListener("click", checkMusica);
-
+  document.getElementById("goMus").addEventListener("click", () => {
+  showScreen("mus");
+  nuovoBranoMus();
+});
+document.getElementById("backHomeMus").addEventListener("click", () => showScreen("home"));
+document.getElementById("btnNewMus").addEventListener("click", nuovoBranoMus);
+document.getElementById("btnPlayMus").addEventListener("click", playMus);
+document.getElementById("btnCheckMus").addEventListener("click", checkMus);
 caricaMusica()
   // back
   document.getElementById("backHomeArte").addEventListener("click", () => showScreen("home"));
@@ -1060,6 +1067,7 @@ caricaMusica()
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
 
 
 
