@@ -732,7 +732,71 @@ function checkTec() {
       `❌ Sbagliato\nRisposta corretta: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
   }
 }
+// ======================
+// MUSICA
+// ======================
+let brani = [];
+let branoCorrente = null;
 
+function normMus(t){
+  return (t ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g,"");
+}
+
+async function caricaMusica(){
+  const r = await fetch("music.json");
+  brani = await r.json();
+}
+
+function nuovoBrano(){
+  if (!brani.length) return;
+
+  branoCorrente = brani[Math.floor(Math.random() * brani.length)];
+
+  const player = document.getElementById("musicPlayer");
+  player.src = branoCorrente.file;
+  player.play();
+
+  document.getElementById("musTitolo").value = "";
+  document.getElementById("musAutore").value = "";
+  document.getElementById("musStrumenti").value = "";
+  document.getElementById("musFilm").value = "";
+  document.getElementById("musOut").textContent = "";
+}
+
+function checkMusica(){
+  if (!branoCorrente) return;
+
+  const t = normMus(document.getElementById("musTitolo").value);
+  const a = normMus(document.getElementById("musAutore").value);
+  const f = normMus(document.getElementById("musFilm").value);
+
+  const strUser = document.getElementById("musStrumenti").value
+    .toLowerCase()
+    .split(",")
+    .map(s => s.trim());
+
+  let punti = 0;
+
+  if (t && normMus(branoCorrente.titolo).includes(t)) punti++;
+  if (a && normMus(branoCorrente.autore).includes(a)) punti++;
+
+  const strumentiOk = strUser.filter(s =>
+    branoCorrente.strumenti.some(x => x.toLowerCase().includes(s))
+  );
+  if (strumentiOk.length > 0) punti++;
+
+  if (f && normMus(branoCorrente.film).includes(f)) punti++;
+
+  document.getElementById("musOut").textContent =
+    `Punteggio: ${punti}/4\n` +
+    `Titolo: ${branoCorrente.titolo}\n` +
+    `Autore: ${branoCorrente.autore}\n` +
+    `Strumenti: ${branoCorrente.strumenti.join(", ")}\n` +
+    `Film: ${branoCorrente.film}`;
+}
 // ======================
 // GEOGRAFIA (Africa) - SOLO Stato ↔ Capitale
 // ======================
@@ -901,4 +965,5 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
 
