@@ -282,7 +282,48 @@
 
       <pre id="tecOut" class="out"></pre>
     </section>
+<!-- MUSICA -->
+<section id="screenMus" class="card" style="display:none;">
+  <header class="header">
+    <div>
+      <h1>Musica</h1>
+      <p>Ascolta il brano e rispondi</p>
+    </div>
+    <div class="badge">🎵</div>
+  </header>
 
+  <div class="row">
+    <button class="btn" id="backHomeMus">(Indietro)</button>
+    <button class="btnPrimary" id="btnNewMus">Nuovo brano</button>
+  </div>
+
+  <audio id="musicPlayer" controls></audio>
+
+  <div class="inputs">
+    <div class="input">
+      <span>Titolo</span>
+      <input id="musTitolo">
+    </div>
+    <div class="input">
+      <span>Autore</span>
+      <input id="musAutore">
+    </div>
+    <div class="input">
+      <span>Strumenti (separati da virgola)</span>
+      <input id="musStrumenti">
+    </div>
+    <div class="input">
+      <span>Film</span>
+      <input id="musFilm">
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btnPrimary" id="btnCheckMus">Controlla</button>
+  </div>
+
+  <pre id="musOut" class="out"></pre>
+</section>
     <!-- GEOGRAFIA -->
     <section id="screenGeog" class="card" style="display:none;">
       <header class="header">
@@ -319,3 +360,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+
