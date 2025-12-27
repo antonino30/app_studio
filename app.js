@@ -797,6 +797,96 @@ function checkMusica(){
     `Autore: ${branoCorrente.autore}\n` +
     `Strumenti: ${branoCorrente.strumenti.join(", ")}\n` +
     `Film: ${branoCorrente.film}`;
+  let brani = [
+  {
+    file: "audio/brano1.mp3",
+    titolo: ["brano 1"],
+    autore: ["autore 1"],
+    strumenti: ["pianoforte"],      // puoi mettere più strumenti separati da virgola
+    film: ["nessuno"]               // oppure ["Titanic"] ecc.
+  },
+  {
+    file: "audio/brano2.mp3",
+    titolo: ["brano 2"],
+    autore: ["autore 2"],
+    strumenti: ["violino", "orchestra"],
+    film: ["nessuno"]
+  }
+];
+
+let musCorrente = null;
+
+function normTxt(s){
+  return (s ?? "")
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g," ");
+}
+
+function pickRandom(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function nuovoBranoMus(){
+  musCorrente = pickRandom(brani);
+
+  const player = document.getElementById("player");
+  const out = document.getElementById("musOut");
+
+  out.textContent = "Premi Play e poi rispondi.";
+
+  // reset input
+  document.getElementById("musTitolo").value = "";
+  document.getElementById("musAutore").value = "";
+  document.getElementById("musStrumenti").value = "";
+  document.getElementById("musFilm").value = "";
+
+  // carica audio
+  player.src = musCorrente.file;
+  player.load();
+
+  // debug se non si carica
+  player.onerror = () => {
+    out.textContent = "❌ Audio non trovato o non supportato: " + musCorrente.file +
+      "\nControlla che esista su GitHub e che il nome sia uguale (maiuscole/minuscole).";
+  };
+}
+
+function playMus(){
+  const player = document.getElementById("player");
+  player.play().catch(err=>{
+    document.getElementById("musOut").textContent =
+      "⚠️ Il browser ha bloccato la riproduzione automatica.\nPremi Play sul player (o riprova).";
+  });
+}
+
+function checkMus(){
+  if(!musCorrente) return;
+
+  const t = normTxt(document.getElementById("musTitolo").value);
+  const a = normTxt(document.getElementById("musAutore").value);
+  const s = normTxt(document.getElementById("musStrumenti").value);
+  const f = normTxt(document.getElementById("musFilm").value);
+
+  const okTit = musCorrente.titolo.some(x => normTxt(x) === t || normTxt(x).includes(t) || t.includes(normTxt(x)));
+  const okAut = musCorrente.autore.some(x => normTxt(x) === a || normTxt(x).includes(a) || a.includes(normTxt(x)));
+
+  // strumenti: basta che scrivi almeno 1 strumento corretto
+  const okStr = musCorrente.strumenti.some(x => s.includes(normTxt(x)));
+
+  // film: accetta vuoto se "nessuno"
+  const filmSol = musCorrente.film.map(normTxt);
+  const okFilm = (f === "" && filmSol.includes("nessuno")) || filmSol.some(x => x === f || x.includes(f) || f.includes(x));
+
+  const punti = (okTit?1:0)+(okAut?1:0)+(okStr?1:0)+(okFilm?1:0);
+
+  document.getElementById("musOut").textContent =
+    `Punteggio: ${punti}/4\n`+
+    `Titolo: ${musCorrente.titolo.join(" / ")}\n`+
+    `Autore: ${musCorrente.autore.join(" / ")}\n`+
+    `Strumenti: ${musCorrente.strumenti.join(", ")}\n`+
+    `Film: ${musCorrente.film.join(" / ")}`;
 }
 // ======================
 // GEOGRAFIA (Africa) - SOLO Stato ↔ Capitale
@@ -970,6 +1060,7 @@ caricaMusica()
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
 
 
 
