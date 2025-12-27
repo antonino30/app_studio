@@ -1,0 +1,23 @@
+[
+  {
+    "file": "audio/interstellar.mp3",
+    "titolo": "Interstellar Main Theme",
+    "autore": "Hans Zimmer",
+    "strumenti": ["organo", "archi", "sintetizzatore"],
+    "film": "Interstellar"
+  },
+  {
+    "file": "audio/pirates.mp3",
+    "titolo": "He's a Pirate",
+    "autore": "Hans Zimmer",
+    "strumenti": ["archi", "ottoni", "percussioni"],
+    "film": "Pirati dei Caraibi"
+  },
+  {
+    "file": "audio/cinema_paradiso.mp3",
+    "titolo": "Love Theme",
+    "autore": "Ennio Morricone",
+    "strumenti": ["archi", "pianoforte"],
+    "film": "Nuovo Cinema Paradiso"
+  }
+]
