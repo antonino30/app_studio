@@ -27,6 +27,7 @@ function showScreen(name) {
       "screenGeog";
     const el = document.getElementById(id);
     if (el) el.style.display = (name === s) ? "block" : "none";
+    document.getElementById("screenMus").style.display = (name === "mus") ? "block" : "none";
   });
 }
 
@@ -965,5 +966,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Carica arte all'avvio (così è pronta)
   caricaArte();
 });
+
 
 
