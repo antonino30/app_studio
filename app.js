@@ -4,6 +4,7 @@
 function rInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -12,32 +13,78 @@ function shuffle(arr) {
   }
   return a;
 }
+
 function normText(s) {
   return (s ?? "")
     .toString()
     .toLowerCase()
     .trim()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")
-    .replace(/\s+/g, " ");
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // toglie accenti
+    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")      // articoli
+    .replace(/\s+/g, " ");                           // spazi
 }
 
 function showScreen(name) {
   const map = {
     home: "screenHome",
     arte: "screenArte",
-    mat: "screenMat",
-    tec: "screenTec",
-    geo: "screenGeo",
+    mat:  "screenMat",
+    tec:  "screenTec",
+    geo:  "screenGeo",
     geog: "screenGeog",
-    mus: "screenMus",
+    mus:  "screenMus",
   };
+
   Object.values(map).forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = "none";
   });
+
   const target = document.getElementById(map[name]);
   if (target) target.style.display = "block";
+}
+
+// ======================
+// CALCOLATRICI
+// ======================
+function calcAppend(displayId, v) {
+  const el = document.getElementById(displayId);
+  if (!el) return;
+  el.value += v;
+}
+function calcClear(displayId) {
+  const el = document.getElementById(displayId);
+  if (!el) return;
+  el.value = "";
+}
+function calcEq(displayId) {
+  const el = document.getElementById(displayId);
+  if (!el) return;
+  try {
+    // eval su input controllato dai bottoni
+    el.value = eval(el.value);
+  } catch {
+    el.value = "Errore";
+  }
+}
+
+function bindCalculators() {
+  document.querySelectorAll("button[data-calc]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const which = btn.dataset.calc; // mat / tec / geo
+      const act = btn.dataset.act;    // clear / eq
+      const v = btn.dataset.v;
+
+      const displayId =
+        which === "mat" ? "calcMat" :
+        which === "tec" ? "calcTec" :
+        "calcGeo";
+
+      if (act === "clear") return calcClear(displayId);
+      if (act === "eq") return calcEq(displayId);
+      if (v !== undefined) return calcAppend(displayId, v);
+    });
+  });
 }
 
 // ======================
@@ -57,14 +104,17 @@ function normArte(t) {
     .replace(/^(la|il|lo|l'|i|gli|le)\s+/i, "")
     .replace(/\s+/g, "");
 }
+
 function operaId(op, i) {
   return op.img ? `img:${op.img}` : `idx:${i}`;
 }
+
 function updateArtInfo() {
   const info = document.getElementById("artInfo");
   if (!info) return;
   info.textContent = `Selezionati: ${selectedIds.size} su ${opere.length}`;
 }
+
 function renderArtList() {
   const list = document.getElementById("artList");
   const qEl = document.getElementById("artSearch");
@@ -123,6 +173,7 @@ function renderArtList() {
 
   updateArtInfo();
 }
+
 function buildArteDeckFromSelection() {
   const pool = opere
     .map((op, i) => ({ op, id: operaId(op, i) }))
@@ -145,6 +196,7 @@ function buildArteDeckFromSelection() {
   idx = 0;
   return true;
 }
+
 function titoloOK(risposta, listaTitoli) {
   const r = normArte(risposta);
   return listaTitoli.some(t => {
@@ -152,6 +204,7 @@ function titoloOK(risposta, listaTitoli) {
     return r === s || s.includes(r) || r.includes(s);
   });
 }
+
 function artistaOK(risposta, soluzione) {
   const r = normArte(risposta);
   const s = normArte(soluzione);
@@ -159,11 +212,11 @@ function artistaOK(risposta, soluzione) {
 }
 
 async function caricaArte() {
+  const out = document.getElementById("out");
   try {
     const r = await fetch("data.json", { cache: "no-store" });
     opere = await r.json();
 
-    const out = document.getElementById("out");
     if (!Array.isArray(opere) || opere.length === 0) {
       if (out) out.textContent = "data.json è vuoto o non valido.";
       return;
@@ -174,8 +227,7 @@ async function caricaArte() {
     buildArteDeckFromSelection();
     nextArte();
   } catch (e) {
-    const out = document.getElementById("out");
-    if (out) out.textContent = "Errore caricamento data.json (controlla che sia su GitHub).";
+    if (out) out.textContent = "Errore caricamento data.json (controlla che sia nel repo).";
   }
 }
 
@@ -190,13 +242,16 @@ function nextArte() {
   corrente = mazzo[idx++];
   const imgEl = document.getElementById("artImg");
   const out = document.getElementById("out");
+
   if (!imgEl) return;
 
   imgEl.onerror = () => {
-    if (out) out.textContent = "Immagine non trovata: " + (corrente?.img ?? "(manca path)");
+    if (out) out.textContent =
+      "Immagine non trovata: " + (corrente?.img ?? "(manca path)") +
+      "\nControlla che esista la cartella img/ su GitHub e che il nome file combaci (maiuscole/minuscole).";
   };
 
-  // In data.json deve essere tipo: "img/gioconda.jpg"
+  // nel tuo data.json deve essere tipo: "img/gioconda.jpg"
   imgEl.src = corrente.img;
 
   if (out) out.textContent = "";
@@ -319,7 +374,7 @@ function sameMonomial(user, sol) {
 function nuovaEspressione() {
   const tipo = rInt(1, 12);
   const c = () => rInt(2, 12);
-  const e = () => rInt(1, 5);
+  const e = () => rInt(1, 6);
   const M = (coef, exp) => mono(coef, 1, exp);
 
   let expr = "";
@@ -327,85 +382,83 @@ function nuovaEspressione() {
 
   switch (tipo) {
     case 1: {
-      const a = c(), b = c(), cc = c();
-      const m = e(), n = e(), k = rInt(1, 4);
+      const a=c(), b=c(), cc=c();
+      const m=e(), n=e(), k=rInt(1,4);
       expr = `( ${a}x^${m} · ${b}x^${n} ) ÷ ( ${cc}x^${k} )`;
       sol = monoDiv(monoMul(M(a,m), M(b,n)), M(cc,k));
       break;
     }
     case 2: {
-      const a = c(), b = c(), cc = c();
-      const m = e(), n = rInt(1,4), k = e();
+      const a=c(), b=c(), cc=c();
+      const m=e(), n=rInt(1,4), k=e();
       expr = `( ${a}x^${m} ÷ ${b}x^${n} ) · ( ${cc}x^${k} )`;
       sol = monoMul(monoDiv(M(a,m), M(b,n)), M(cc,k));
       break;
     }
     case 3: {
-      const a = c(), b = c(), cc = c();
-      const m = rInt(1,4), n = e(), k = rInt(1,4);
+      const a=c(), b=c(), cc=c();
+      const m=rInt(1,4), n=e(), k=rInt(1,4);
       expr = `( (${a}x^${m})^2 · ${b}x^${n} ) ÷ ( ${cc}x^${k} )`;
       sol = monoDiv(monoMul(monoPow(M(a,m),2), M(b,n)), M(cc,k));
       break;
     }
     case 4: {
-      const p = c();
-      const n = rInt(1,4);
-      const a = c(), m = e();
+      const p=c(), n=rInt(1,4), a=c(), m=e();
       expr = `√(${p*p}x^${2*n}) · (${a}x^${m})`;
       sol = monoMul(M(p,n), M(a,m));
       break;
     }
     case 5: {
-      const a = c(), b = c(), cc = c();
-      const m = e(), k = e();
+      const a=c(), b=c(), cc=c();
+      const m=e(), k=e();
       expr = `( ${a}x^${m} + ${b}x^${m} ) · ${cc}x^${k}`;
       sol = monoMul(M(a+b, m), M(cc,k));
       break;
     }
     case 6: {
-      const a = rInt(10,30), b = rInt(2,9), cc = c();
-      const m = e(), k = rInt(1,4);
+      const a=rInt(10,40), b=rInt(2,12), cc=c();
+      const m=e(), k=rInt(1,4);
       expr = `( ${a}x^${m} − ${b}x^${m} ) ÷ ${cc}x^${k}`;
       sol = monoDiv(M(a-b, m), M(cc,k));
       break;
     }
     case 7: {
-      const a = c(), b = c(), cc = c();
-      const m = e(), n = e(), k = rInt(1,4);
+      const a=c(), b=c(), cc=c();
+      const m=e(), n=e(), k=rInt(1,4);
       expr = `( ${a}x^${m} · ${b}x^${n} ) ÷ ( (${cc}x^${k})^2 )`;
       sol = monoDiv(monoMul(M(a,m), M(b,n)), monoPow(M(cc,k),2));
       break;
     }
     case 8: {
-      const a = c(), b = rInt(2,9), cc = c(), d = rInt(2,9);
-      const m = e(), n = e();
+      const a=c(), b=rInt(2,9), cc=c(), d=rInt(2,9);
+      const m=e(), n=e();
       expr = `( ${a}x^${m} ÷ ${b} ) · ( ${cc}x^${n} ÷ ${d} )`;
       sol = monoMul(mono(a,b,m), mono(cc,d,n));
       break;
     }
     case 9: {
-      const a = c(), b = rInt(2,9), cc = c(), d = rInt(2,9);
-      const m = e(), n = e();
+      const a=c(), b=rInt(2,9), cc=c(), d=rInt(2,9);
+      const m=e(), n=e();
       expr = `( (${a}/${b})x^${m} ) ÷ ( (${cc}/${d})x^${n} )`;
       sol = monoDiv(mono(a,b,m), mono(cc,d,n));
       break;
     }
     case 10: {
-      const a = c(), b = c();
-      const m = rInt(1,3), n = e();
+      const a=c(), b=c();
+      const m=rInt(1,3), n=e();
       expr = `( ${a}x^${m} )^3 ÷ ( ${b}x^${n} )`;
       sol = monoDiv(monoPow(M(a,m),3), M(b,n));
       break;
     }
     case 11: {
-      const a = c(), m = e();
+      const a=c(), m=e();
       expr = `√(${a*a}) · x^${m}`;
       sol = M(a,m);
       break;
     }
     case 12: {
-      const a = c(), b = c(), cc = c();
-      const m = e(), n = e();
+      const a=c(), b=c(), cc=c();
+      const m=e(), n=e();
       expr = `( ${a}x^${m} · ${b}x^${n} ) + ( ${cc}x^${m+n} )`;
       sol = M(a*b + cc, m+n);
       break;
@@ -489,7 +542,8 @@ function checkGeo() {
   if (Math.abs(n - soluzioneGeo) <= 0.9) {
     document.getElementById("geoOut").textContent = "✅ Corretto!";
   } else {
-    document.getElementById("geoOut").textContent = `❌ Sbagliato\nRisultato corretto: ${soluzioneGeo}`;
+    document.getElementById("geoOut").textContent =
+      `❌ Sbagliato\nRisultato corretto: ${soluzioneGeo}`;
   }
 }
 
@@ -602,8 +656,8 @@ function checkGeog() {
     document.getElementById("geogOut").textContent = "Scrivi una risposta.";
     return;
   }
-  const ok = (ans === sol) || sol.includes(ans) || ans.includes(sol);
 
+  const ok = (ans === sol) || sol.includes(ans) || ans.includes(sol);
   document.getElementById("geogOut").textContent = ok
     ? "✅ Corretto!"
     : `❌ Sbagliato\nRisposta corretta: ${geogCurrent.a}`;
@@ -616,56 +670,69 @@ let brani = [];
 let branoCorrente = null;
 
 async function caricaMusica() {
+  const out = document.getElementById("musOut");
   try {
     const r = await fetch("music.json", { cache: "no-store" });
     brani = await r.json();
+    if (!Array.isArray(brani)) brani = [];
   } catch {
     brani = [];
+    if (out) out.textContent = "❌ music.json non trovato o non valido.";
   }
 }
 
 function nuovoBranoMus() {
   const out = document.getElementById("musOut");
+  const player = document.getElementById("musicPlayer");
+
   if (!brani.length) {
-    out.textContent = "❌ music.json non trovato o vuoto.";
+    out.textContent = "❌ music.json è vuoto oppure non si carica.";
     return;
   }
 
   branoCorrente = brani[Math.floor(Math.random() * brani.length)];
 
-  const player = document.getElementById("musicPlayer");
-  player.src = branoCorrente.file;
-  player.load();
-
+  // reset input
   document.getElementById("musTitolo").value = "";
   document.getElementById("musAutore").value = "";
   document.getElementById("musStrumenti").value = "";
   document.getElementById("musFilm").value = "";
+
+  // carica audio
+  player.src = branoCorrente.file; // es: "audio/take_five.mp3"
+  player.load();
+
   out.textContent = "Premi Play e poi rispondi.";
 
   player.onerror = () => {
     out.textContent =
-      "❌ Audio non trovato: " + branoCorrente.file +
-      "\nControlla che il file esista su GitHub (stesso nome, maiuscole/minuscole).";
+      "❌ Audio non trovato o non supportato: " + branoCorrente.file +
+      "\nControlla che il file esista su GitHub e che il nome sia IDENTICO (maiuscole/minuscole).";
   };
 }
 
 function playMus() {
+  const out = document.getElementById("musOut");
   const player = document.getElementById("musicPlayer");
   player.play().catch(() => {
-    document.getElementById("musOut").textContent =
-      "⚠️ Il browser ha bloccato l'autoplay.\nPremi Play sul player (oppure riprova).";
+    out.textContent =
+      "⚠️ Il browser ha bloccato la riproduzione automatica.\nPremi Play direttamente nel player audio (sotto).";
   });
 }
 
 function checkMus() {
-  if (!branoCorrente) return;
+  const out = document.getElementById("musOut");
+  if (!branoCorrente) {
+    out.textContent = "Premi “Nuovo brano” prima.";
+    return;
+  }
 
   const t = normText(document.getElementById("musTitolo").value);
   const a = normText(document.getElementById("musAutore").value);
   const f = normText(document.getElementById("musFilm").value);
 
-  const userStr = normText(document.getElementById("musStrumenti").value)
+  const userStr = document.getElementById("musStrumenti").value
+    .toLowerCase()
     .split(",")
     .map(x => x.trim())
     .filter(Boolean);
@@ -677,12 +744,22 @@ function checkMus() {
 
   const okTit = t && (solTit.includes(t) || t.includes(solTit));
   const okAut = a && (solAut.includes(a) || a.includes(solAut));
-  const okFilm = (f === "" && solFilm === "non c'e") || (solFilm.includes(f) || f.includes(solFilm));
-  const okStr = userStr.length > 0 && userStr.some(s => solStr.some(x => x.includes(normText(s))));
 
-  const punti = (okTit?1:0) + (okAut?1:0) + (okStr?1:0) + (okFilm?1:0);
+  // strumenti: basta indovinarne almeno 1
+  const okStr = userStr.length > 0 && userStr.some(s => {
+    const ns = normText(s);
+    return solStr.some(x => x.includes(ns) || ns.includes(x));
+  });
 
-  document.getElementById("musOut").textContent =
+  // film: se la soluzione è "non c'e" / "non c’è" accetta anche vuoto
+  const filmIsNone = (solFilm.includes("non c") || solFilm.includes("nessun"));
+  const okFilm = filmIsNone
+    ? (f === "" || f.includes("non") || f.includes("ness"))
+    : (f && (solFilm.includes(f) || f.includes(solFilm)));
+
+  const punti = (okTit ? 1 : 0) + (okAut ? 1 : 0) + (okStr ? 1 : 0) + (okFilm ? 1 : 0);
+
+  out.textContent =
     `Punteggio: ${punti}/4\n` +
     `Titolo: ${branoCorrente.titolo}\n` +
     `Autore: ${branoCorrente.autore}\n` +
@@ -691,48 +768,45 @@ function checkMus() {
 }
 
 // ======================
-// CALCOLATRICI (semplici)
-// ======================
-function calcAppend(displayId, v) {
-  const el = document.getElementById(displayId);
-  if (!el) return;
-  el.value += v;
-}
-function calcClear(displayId) {
-  const el = document.getElementById(displayId);
-  if (!el) return;
-  el.value = "";
-}
-function calcEq(displayId) {
-  const el = document.getElementById(displayId);
-  if (!el) return;
-  try {
-    // semplice: solo numeri e operatori
-    el.value = Function(`"use strict";return (${el.value})`)();
-  } catch {
-    el.value = "Errore";
-  }
-}
-
-// ======================
 // EVENTI
 // ======================
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   showScreen("home");
+  bindCalculators();
 
-  // Carichi una volta
-  caricaArte();
-  await caricaMusica();
+  // HOME -> schermate
+  document.getElementById("goArte").addEventListener("click", async () => {
+    showScreen("arte");
+    if (!opere.length) await caricaArte();
+  });
 
-  // HOME
-  document.getElementById("goArte").addEventListener("click", () => showScreen("arte"));
-  document.getElementById("goMat").addEventListener("click", () => { showScreen("mat"); nuovaEspressione(); });
-  document.getElementById("goTec").addEventListener("click", () => { showScreen("tec"); nuovoProblemaTec(); });
-  document.getElementById("goGeo").addEventListener("click", () => { showScreen("geo"); nuovoProblemaGeo(); });
-  document.getElementById("goGeog").addEventListener("click", () => { showScreen("geog"); nuovaDomandaGeog(); });
-  document.getElementById("goMus").addEventListener("click", () => { showScreen("mus"); nuovoBranoMus(); });
+  document.getElementById("goMat").addEventListener("click", () => {
+    showScreen("mat");
+    nuovaEspressione();
+  });
 
-  // BACK
+  document.getElementById("goTec").addEventListener("click", () => {
+    showScreen("tec");
+    nuovoProblemaTec();
+  });
+
+  document.getElementById("goGeo").addEventListener("click", () => {
+    showScreen("geo");
+    nuovoProblemaGeo();
+  });
+
+  document.getElementById("goGeog").addEventListener("click", () => {
+    showScreen("geog");
+    nuovaDomandaGeog();
+  });
+
+  document.getElementById("goMus").addEventListener("click", async () => {
+    showScreen("mus");
+    if (!brani.length) await caricaMusica();
+    nuovoBranoMus();
+  });
+
+  // back
   document.getElementById("backHomeArte").addEventListener("click", () => showScreen("home"));
   document.getElementById("backHomeMat").addEventListener("click", () => showScreen("home"));
   document.getElementById("backHomeTec").addEventListener("click", () => showScreen("home"));
@@ -744,7 +818,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btnStart").addEventListener("click", nextArte);
   document.getElementById("btnNext").addEventListener("click", nextArte);
   document.getElementById("btnCheck").addEventListener("click", checkArte);
-
   document.getElementById("artSearch").addEventListener("input", renderArtList);
   document.getElementById("artSelAll").addEventListener("click", () => {
     selectedIds = new Set(opere.map((op, i) => operaId(op, i)));
@@ -779,19 +852,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("btnNewMus").addEventListener("click", nuovoBranoMus);
   document.getElementById("btnPlayMus").addEventListener("click", playMus);
   document.getElementById("btnCheckMus").addEventListener("click", checkMus);
-
-  // CALC buttons (delegation)
-  document.body.addEventListener("click", (ev) => {
-    const btn = ev.target.closest("button");
-    if (!btn) return;
-
-    const calc = btn.dataset.calc;
-    if (!calc) return;
-
-    const displayId = calc === "mat" ? "calcMat" : calc === "tec" ? "calcTec" : "calcGeo";
-
-    if (btn.dataset.act === "clear") calcClear(displayId);
-    else if (btn.dataset.act === "eq") calcEq(displayId);
-    else if (btn.dataset.v) calcAppend(displayId, btn.dataset.v);
-  });
 });
