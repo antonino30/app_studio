@@ -52,7 +52,7 @@
       <div class="filtersTop">
         <div class="searchBox">
           <span class="icon">🔎</span>
-          <input id="artSearch" placeholder="Cerca (es. gioconda, van gogh, monet)"/>
+          <input id="artSearch" placeholder="Cerca (es. gioconda, van gogh, monet)" />
         </div>
 
         <div class="filtersBtns">
@@ -73,15 +73,15 @@
     <div class="inputs">
       <div class="input">
         <span>Titolo</span>
-        <input id="inTitolo" placeholder="Scrivi il titolo">
+        <input id="inTitolo" placeholder="Scrivi il titolo" />
       </div>
       <div class="input">
         <span>Artista</span>
-        <input id="inArtista" placeholder="Scrivi l’artista">
+        <input id="inArtista" placeholder="Scrivi l’artista" />
       </div>
       <div class="input">
         <span>Data</span>
-        <input id="inData" placeholder="Es. 1889">
+        <input id="inData" placeholder="Es. 1889" />
       </div>
     </div>
 
@@ -115,7 +115,7 @@
     <div class="inputs">
       <div class="input">
         <span>Risultato</span>
-        <input id="mathAns" placeholder="Es: 6x^4, -3/2x^2, 5x, 12">
+        <input id="mathAns" placeholder="Es: 6x^4, -3/2x^2, 5x, 12" />
       </div>
     </div>
 
@@ -124,7 +124,7 @@
     </div>
 
     <div class="calc">
-      <input id="calcMat" placeholder="Calcolatrice" readonly>
+      <input id="calcMat" placeholder="Calcolatrice" readonly />
       <div class="calcGrid">
         <button data-calc="mat" data-v="7">7</button>
         <button data-calc="mat" data-v="8">8</button>
@@ -177,7 +177,7 @@
     <div class="inputs">
       <div class="input">
         <span>Risposta</span>
-        <input id="tecAns" placeholder="Scrivi il valore">
+        <input id="tecAns" placeholder="Scrivi il valore" />
       </div>
     </div>
 
@@ -186,7 +186,7 @@
     </div>
 
     <div class="calc">
-      <input id="calcTec" placeholder="Calcolatrice" readonly>
+      <input id="calcTec" placeholder="Calcolatrice" readonly />
       <div class="calcGrid">
         <button data-calc="tec" data-v="7">7</button>
         <button data-calc="tec" data-v="8">8</button>
@@ -235,7 +235,7 @@
     <div class="inputs">
       <div class="input">
         <span>Risposta</span>
-        <input id="geoAns" placeholder="Scrivi il risultato">
+        <input id="geoAns" placeholder="Scrivi il risultato" />
       </div>
     </div>
 
@@ -244,7 +244,7 @@
     </div>
 
     <div class="calc">
-      <input id="calcGeo" placeholder="Calcolatrice" readonly>
+      <input id="calcGeo" placeholder="Calcolatrice" readonly />
       <div class="calcGrid">
         <button data-calc="geo" data-v="7">7</button>
         <button data-calc="geo" data-v="8">8</button>
@@ -293,7 +293,7 @@
     <div class="inputs">
       <div class="input">
         <span>Risposta</span>
-        <input id="geogAns" placeholder="Scrivi la risposta">
+        <input id="geogAns" placeholder="Scrivi la risposta" />
       </div>
     </div>
 
@@ -304,65 +304,71 @@
     <pre id="geogOut" class="out"></pre>
   </section>
 
-<!-- MUSICA -->
-<section id="screenMus" class="card" style="display:none;">
-  <header class="header">
-    <div>
-      <h1>Musica</h1>
-      <p>Seleziona i brani, poi ascolta e rispondi: titolo, autore, strumenti, film (o “non c’è”).</p>
-    </div>
-    <div class="badge">Audio</div>
-  </header>
-
-  <div class="row">
-    <button class="btn" id="backHomeMus">(Indietro)</button>
-    <button class="btnPrimary" id="btnNewMus">Nuovo brano</button>
-    <button class="btn" id="btnPlayMus">Play</button>
-  </div>
-
-  <!-- SELEZIONE BRANI (come Arte) -->
-  <section class="filters">
-    <div class="filtersTop">
-      <div class="searchBox">
-        <span class="icon">🔎</span>
-        <input id="musSearch" placeholder="Cerca brano (es. mozart, take five, chopin)" />
+  <!-- MUSICA (con selezione brani + ricerca) -->
+  <section id="screenMus" class="card" style="display:none;">
+    <header class="header">
+      <div>
+        <h1>Musica</h1>
+        <p>Seleziona i brani, poi ascolta e rispondi: titolo, autore, strumenti, film (o “non c’è”).</p>
       </div>
+      <div class="badge">Audio</div>
+    </header>
 
-      <div class="filtersBtns">
-        <button id="musSelAll" class="btnSmall" type="button">Tutti</button>
-        <button id="musSelNone" class="btnSmall" type="button">Nessuno</button>
-        <button id="musApply" class="btnPrimary" type="button">Applica</button>
-      </div>
+    <div class="row">
+      <button class="btn" id="backHomeMus">(Indietro)</button>
+      <button class="btnPrimary" id="btnNewMus">Nuovo brano</button>
+      <button class="btn" id="btnPlayMus">Play</button>
     </div>
 
-    <div id="musList" class="artList"></div>
-    <div id="musInfo" class="artInfo"></div>
+    <!-- SELEZIONE BRANI -->
+    <section class="filters">
+      <div class="filtersTop">
+        <div class="searchBox">
+          <span class="icon">🔎</span>
+          <input id="musSearch" placeholder="Cerca brano (es. mozart, take five, chopin)" />
+        </div>
+
+        <div class="filtersBtns">
+          <button id="musSelAll" class="btnSmall" type="button">Tutti</button>
+          <button id="musSelNone" class="btnSmall" type="button">Nessuno</button>
+          <button id="musApply" class="btnPrimary" type="button">Applica</button>
+        </div>
+      </div>
+
+      <div id="musList" class="artList"></div>
+      <div id="musInfo" class="artInfo"></div>
+    </section>
+
+    <audio id="musicPlayer" controls preload="none"></audio>
+
+    <div class="inputs">
+      <div class="input">
+        <span>Titolo</span>
+        <input id="musTitolo" placeholder="Titolo" />
+      </div>
+      <div class="input">
+        <span>Autore</span>
+        <input id="musAutore" placeholder="Autore" />
+      </div>
+      <div class="input">
+        <span>Strumenti (separati da virgola)</span>
+        <input id="musStrumenti" placeholder="Es: pianoforte, sax, batteria" />
+      </div>
+      <div class="input">
+        <span>Film (oppure: non c’è)</span>
+        <input id="musFilm" placeholder="Es: non c’è" />
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btnPrimary" id="btnCheckMus">Controlla</button>
+    </div>
+
+    <pre id="musOut" class="out"></pre>
   </section>
 
-  <audio id="musicPlayer" controls preload="none"></audio>
+</main>
 
-  <div class="inputs">
-    <div class="input">
-      <span>Titolo</span>
-      <input id="musTitolo" placeholder="Titolo">
-    </div>
-    <div class="input">
-      <span>Autore</span>
-      <input id="musAutore" placeholder="Autore">
-    </div>
-    <div class="input">
-      <span>Strumenti (separati da virgola)</span>
-      <input id="musStrumenti" placeholder="Es: pianoforte, sax, batteria">
-    </div>
-    <div class="input">
-      <span>Film (oppure: non c’è)</span>
-      <input id="musFilm" placeholder="Es: non c’è">
-    </div>
-  </div>
-
-  <div class="row">
-    <button class="btnPrimary" id="btnCheckMus">Controlla</button>
-  </div>
-
-  <pre id="musOut" class="out"></pre>
-</section>
+<script src="app.js"></script>
+</body>
+</html>
