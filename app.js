@@ -14,22 +14,14 @@ function shuffleCopy(arr) {
   return a;
 }
 
-function shuffleInPlace(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
 function normText(s) {
   return (s ?? "")
     .toString()
     .toLowerCase()
     .trim()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // accenti
-    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")      // articoli IT
-    .replace(/\s+/g, " ");                           // spazi
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")
+    .replace(/\s+/g, " ");
 }
 
 function safeGet(id) {
@@ -248,6 +240,15 @@ async function caricaArte() {
   }
 }
 
+function boostArtImageSize() {
+  const img = safeGet("artImg");
+  if (!img) return;
+  // “spinta” via JS (il grosso lo fa il CSS)
+  img.style.width = "100%";
+  img.style.maxHeight = "65vh";
+  img.style.objectFit = "contain";
+}
+
 function nextArte() {
   if (!mazzo.length) return;
 
@@ -259,7 +260,6 @@ function nextArte() {
   corrente = mazzo[idx++];
   const imgEl = safeGet("artImg");
   const out = safeGet("out");
-
   if (!imgEl) return;
 
   imgEl.onerror = () => {
@@ -269,6 +269,7 @@ function nextArte() {
   };
 
   imgEl.src = corrente.img;
+  boostArtImageSize();
 
   if (out) out.textContent = "";
   if (safeGet("inTitolo")) safeGet("inTitolo").value = "";
@@ -298,7 +299,7 @@ function checkArte() {
 }
 
 // ======================
-// MATEMATICA (MONOMI DIFFICILI)
+// MATEMATICA (MONOMI)
 // ======================
 let soluzioneMath = null;
 
@@ -678,12 +679,105 @@ function checkGeog() {
 }
 
 // ======================
-// MUSICA (deck NO RIPETIZIONI come Arte)
+// MUSICA (Selezione + ricerca + deck senza ripetizioni)
 // ======================
 let brani = [];
+let branoCorrente = null;
+
+// selezione
+let musSelectedIds = new Set();
+
+// deck
 let musDeck = [];
 let musIdx = 0;
-let branoCorrente = null;
+
+function branoId(b, i) {
+  return b.file ? `file:${b.file}` : `idx:${i}`;
+}
+
+function updateMusInfo() {
+  const info = safeGet("musInfo");
+  if (!info) return;
+  info.textContent = `Selezionati: ${musSelectedIds.size} su ${brani.length}`;
+}
+
+function renderMusList() {
+  const list = safeGet("musList");
+  const qEl = safeGet("musSearch");
+  if (!list || !qEl) return;
+
+  const q = normText(qEl.value).replace(/\s+/g, "");
+  list.innerHTML = "";
+
+  brani.forEach((b, i) => {
+    const id = branoId(b, i);
+    const titolo = b.titolo ?? "Senza titolo";
+    const autore = b.autore ?? "";
+
+    const hay = normText(`${titolo} ${autore}`).replace(/\s+/g, "");
+    if (q && !hay.includes(q)) return;
+
+    const row = document.createElement("div");
+    row.className = "artRow"; // riuso stile lista (se vuoi puoi farne uno "musRow")
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = musSelectedIds.has(id);
+    cb.tabIndex = -1;
+    cb.style.pointerEvents = "none";
+
+    const meta = document.createElement("div");
+    meta.className = "artMeta";
+
+    const t1 = document.createElement("div");
+    t1.className = "artTitle";
+    t1.textContent = titolo;
+
+    const t2 = document.createElement("div");
+    t2.className = "artSub";
+    t2.textContent = autore || "Autore sconosciuto";
+
+    meta.appendChild(t1);
+    meta.appendChild(t2);
+
+    row.appendChild(cb);
+    row.appendChild(meta);
+
+    row.addEventListener("click", () => {
+      const newVal = !musSelectedIds.has(id);
+      if (newVal) musSelectedIds.add(id);
+      else musSelectedIds.delete(id);
+      cb.checked = newVal;
+      row.classList.toggle("isSelected", newVal);
+      updateMusInfo();
+    });
+
+    row.classList.toggle("isSelected", musSelectedIds.has(id));
+    list.appendChild(row);
+  });
+
+  updateMusInfo();
+}
+
+function buildMusicDeckFromSelection() {
+  const pool = brani
+    .map((b, i) => ({ b, id: branoId(b, i) }))
+    .filter(x => musSelectedIds.has(x.id))
+    .map(x => x.b);
+
+  const out = safeGet("musOut");
+  if (!pool.length) {
+    if (out) out.textContent = "Seleziona almeno 1 brano e premi Applica.";
+    musDeck = [];
+    musIdx = 0;
+    branoCorrente = null;
+    return false;
+  }
+
+  musDeck = shuffleCopy(pool);
+  musIdx = 0;
+  return true;
+}
 
 async function caricaMusica() {
   const out = safeGet("musOut");
@@ -691,12 +785,22 @@ async function caricaMusica() {
     const r = await fetch("music.json", { cache: "no-store" });
     brani = await r.json();
     if (!Array.isArray(brani)) brani = [];
-    musDeck = shuffleCopy(brani);
-    musIdx = 0;
 
-    if (!brani.length && out) out.textContent = "❌ music.json è vuoto o non valido.";
+    if (!brani.length) {
+      if (out) out.textContent = "❌ music.json è vuoto o non valido.";
+      musSelectedIds = new Set();
+      musDeck = [];
+      musIdx = 0;
+      return;
+    }
+
+    // di default seleziona tutti
+    musSelectedIds = new Set(brani.map((b, i) => branoId(b, i)));
+    renderMusList();
+    buildMusicDeckFromSelection();
   } catch {
     brani = [];
+    musSelectedIds = new Set();
     musDeck = [];
     musIdx = 0;
     if (out) out.textContent = "❌ music.json non trovato o non valido.";
@@ -713,19 +817,25 @@ function nextBranoMus() {
     return;
   }
 
-  if (!musDeck.length || musIdx >= musDeck.length) {
-    musDeck = shuffleCopy(brani);
+  if (!musDeck.length) {
+    // se per qualche motivo non è stato creato
+    const ok = buildMusicDeckFromSelection();
+    if (!ok) return;
+  }
+
+  if (musIdx >= musDeck.length) {
+    musDeck = shuffleCopy(musDeck);
     musIdx = 0;
   }
 
   branoCorrente = musDeck[musIdx++];
 
-  safeGet("musTitolo").value = "";
-  safeGet("musAutore").value = "";
-  safeGet("musStrumenti").value = "";
-  safeGet("musFilm").value = "";
+  if (safeGet("musTitolo")) safeGet("musTitolo").value = "";
+  if (safeGet("musAutore")) safeGet("musAutore").value = "";
+  if (safeGet("musStrumenti")) safeGet("musStrumenti").value = "";
+  if (safeGet("musFilm")) safeGet("musFilm").value = "";
 
-  player.src = branoCorrente.file;   // es: "audio/take_five.mp3"
+  player.src = branoCorrente.file;
   player.load();
 
   if (out) out.textContent = "Premi Play e poi rispondi.";
@@ -733,7 +843,7 @@ function nextBranoMus() {
   player.onerror = () => {
     if (out) out.textContent =
       "❌ Audio non trovato: " + branoCorrente.file +
-      "\nControlla che il file esista su GitHub e che il nome sia IDENTICO (maiuscole/minuscole).";
+      "\nControlla che esista su GitHub e che il nome sia IDENTICO (maiuscole/minuscole).";
   };
 }
 
@@ -755,11 +865,11 @@ function checkMus() {
     return;
   }
 
-  const t = normText(safeGet("musTitolo").value);
-  const a = normText(safeGet("musAutore").value);
-  const f = normText(safeGet("musFilm").value);
+  const t = normText(safeGet("musTitolo")?.value ?? "");
+  const a = normText(safeGet("musAutore")?.value ?? "");
+  const f = normText(safeGet("musFilm")?.value ?? "");
 
-  const userStr = safeGet("musStrumenti").value
+  const userStr = (safeGet("musStrumenti")?.value ?? "")
     .toLowerCase()
     .split(",")
     .map(x => x.trim())
@@ -799,8 +909,9 @@ function checkMus() {
 document.addEventListener("DOMContentLoaded", () => {
   showScreen("home");
   bindCalculators();
+  boostArtImageSize();
 
-  // HOME -> schermate
+  // HOME
   onClick("goArte", async () => {
     showScreen("arte");
     if (!opere.length) await caricaArte();
@@ -883,4 +994,22 @@ document.addEventListener("DOMContentLoaded", () => {
   onClick("btnNewMus",   nextBranoMus);
   onClick("btnPlayMus",  playMus);
   onClick("btnCheckMus", checkMus);
+
+  const musSearch = safeGet("musSearch");
+  if (musSearch) musSearch.addEventListener("input", renderMusList);
+
+  onClick("musSelAll", () => {
+    musSelectedIds = new Set(brani.map((b, i) => branoId(b, i)));
+    renderMusList();
+  });
+
+  onClick("musSelNone", () => {
+    musSelectedIds = new Set();
+    renderMusList();
+  });
+
+  onClick("musApply", () => {
+    const ok = buildMusicDeckFromSelection();
+    if (ok) nextBranoMus();
+  });
 });
