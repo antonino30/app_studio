@@ -436,3 +436,10 @@ body{
 }
 .imgBoxFull { height: 70vh; }
 .imgBoxFull img { width: 100%; height: 100%; object-fit: contain; }
+
+#screenTec img {
+  width: 100%;
+  max-width: 500px;
+  display: block;
+  margin: 10px auto;
+}
