@@ -664,10 +664,22 @@ function checkGeog() {
 }
 
 // ======================
-// MUSICA
+// MUSICA (NO RIPETIZIONI: deck come Arte)
 // ======================
 let brani = [];
 let branoCorrente = null;
+
+// deck
+let musDeck = [];
+let musIdx = 0;
+
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 async function caricaMusica() {
   const out = document.getElementById("musOut");
@@ -675,13 +687,21 @@ async function caricaMusica() {
     const r = await fetch("music.json", { cache: "no-store" });
     brani = await r.json();
     if (!Array.isArray(brani)) brani = [];
+
+    // crea deck iniziale
+    musDeck = shuffleInPlace([...brani]);
+    musIdx = 0;
+
+    if (!brani.length && out) out.textContent = "❌ music.json è vuoto o non valido.";
   } catch {
     brani = [];
+    musDeck = [];
+    musIdx = 0;
     if (out) out.textContent = "❌ music.json non trovato o non valido.";
   }
 }
 
-function nuovoBranoMus() {
+function nextBranoMus() {
   const out = document.getElementById("musOut");
   const player = document.getElementById("musicPlayer");
 
@@ -690,7 +710,13 @@ function nuovoBranoMus() {
     return;
   }
 
-  branoCorrente = brani[Math.floor(Math.random() * brani.length)];
+  // se deck finito, rimischia e riparti
+  if (!musDeck.length || musIdx >= musDeck.length) {
+    musDeck = shuffleInPlace([...brani]);
+    musIdx = 0;
+  }
+
+  branoCorrente = musDeck[musIdx++];
 
   // reset input
   document.getElementById("musTitolo").value = "";
@@ -745,13 +771,11 @@ function checkMus() {
   const okTit = t && (solTit.includes(t) || t.includes(solTit));
   const okAut = a && (solAut.includes(a) || a.includes(solAut));
 
-  // strumenti: basta indovinarne almeno 1
   const okStr = userStr.length > 0 && userStr.some(s => {
     const ns = normText(s);
     return solStr.some(x => x.includes(ns) || ns.includes(x));
   });
 
-  // film: se la soluzione è "non c'e" / "non c’è" accetta anche vuoto
   const filmIsNone = (solFilm.includes("non c") || solFilm.includes("nessun"));
   const okFilm = filmIsNone
     ? (f === "" || f.includes("non") || f.includes("ness"))
@@ -853,3 +877,4 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnPlayMus").addEventListener("click", playMus);
   document.getElementById("btnCheckMus").addEventListener("click", checkMus);
 });
+
