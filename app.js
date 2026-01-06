@@ -827,7 +827,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("goMus").addEventListener("click", async () => {
     showScreen("mus");
     if (!brani.length) await caricaMusica();
-    nuovoBranoMus();
+    nextBranoMus();
   });
 
   // back
@@ -873,8 +873,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnCheckGeog").addEventListener("click", checkGeog);
 
   // MUS
-  document.getElementById("btnNewMus").addEventListener("click", nuovoBranoMus);
+  document.getElementById("btnNewMus").addEventListener("click", nextBranoMus);
   document.getElementById("btnPlayMus").addEventListener("click", playMus);
   document.getElementById("btnCheckMus").addEventListener("click", checkMus);
 });
+
 
