@@ -96,7 +96,7 @@
     "data": "1822"
   },
   {
-    "img": "img/le_donne_di_Algeri_nei_loro_appartamenti.jpg",
+    "img": "img/le_donne_di_algeri_nei_loro_appartamenti.jpg",
     "titoli": ["le donne di algeri nei loro appartamenti"],
     "artista": "Eugène Delacroix",
     "data": "1834"
@@ -155,4 +155,5 @@
     "artista": "Francisco Goya",
     "data": "1799"
   }
+
   ]
