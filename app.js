@@ -565,73 +565,92 @@ function checkGeo() {
 }
 
 // ======================
-// TECNOLOGIA
+// TECNOLOGIA (Ohm: mostra SOLO 2 dati su 3)
 // ======================
+let soluzioneTec = 0;
+let unitaTec = "";
 
 function nuovoProblemaTec() {
   const tecImg = document.getElementById("tecImg");
 
-  // UNA SOLA IMMAGINE FISSA
-  if (tecImg) {
-    tecImg.src = "img/circuito_semplice.png";
-  }
+  // UNA SOLA IMMAGINE FISSA (se vuoi tenerla)
+  if (tecImg) tecImg.src = "img/circuito_semplice.png";
 
+  // scegli cosa manca: 0=I, 1=V, 2=R
   const missing = rInt(0, 2);
+
+  // valori da mostrare (solo 2 saranno numeri, 1 sarà "?")
+  let Vshow = "?";
+  let Ishow = "?";
+  let Rshow = "?";
+
   let V, I, R;
 
   if (missing === 0) {
+    // manca I -> mostro V e R
     V = rInt(6, 24);
     R = rInt(2, 30);
     I = V / R;
+
+    Vshow = V.toFixed(2);
+    Rshow = R.toFixed(2);
+
     soluzioneTec = I;
     unitaTec = "A";
-  } 
-  else if (missing === 1) {
+  } else if (missing === 1) {
+    // manca V -> mostro I e R
     R = rInt(2, 30);
     I = rInt(1, 20) / rInt(2, 10);
     V = I * R;
+
+    Ishow = I.toFixed(2);
+    Rshow = R.toFixed(2);
+
     soluzioneTec = V;
     unitaTec = "V";
-  } 
-  else {
+  } else {
+    // manca R -> mostro V e I
     V = rInt(6, 24);
     I = rInt(1, 20) / rInt(2, 10);
     R = V / I;
+
+    Vshow = V.toFixed(2);
+    Ishow = I.toFixed(2);
+
     soluzioneTec = R;
     unitaTec = "Ω";
   }
 
-  const testo = `
-DATI:
-- V = ${V ? V.toFixed(2) : "?"} V
-- I = ${I ? I.toFixed(2) : "?"} A
-- R = ${R ? R.toFixed(2) : "?"} Ω
+  const testo =
+`DATI:
+- V = ${Vshow} V
+- I = ${Ishow} A
+- R = ${Rshow} Ω
 
 DOMANDA:
-Trova il valore mancante.
-  `.trim();
+Trova il valore mancante.`;
 
   document.getElementById("tecText").textContent = testo;
   document.getElementById("tecAns").value = "";
   document.getElementById("tecOut").textContent = "";
 }
 
-// Funzione di controllo risposta
 function checkTec() {
-  const ans = parseFloat(document.getElementById("tecAns").value.replace(",", "."));
   const out = document.getElementById("tecOut");
+  const raw = document.getElementById("tecAns").value.trim().replace(",", ".");
+  const ans = parseFloat(raw);
 
-  if (isNaN(ans)) {
+  if (Number.isNaN(ans)) {
     out.textContent = "Inserisci un numero valido.";
     return;
   }
 
-  const diff = Math.abs(ans - soluzioneTec);
-  if (diff <= 0.1) {
-    out.textContent = `✅ Corretto! (${soluzioneTec.toFixed(2)} ${unitaTec})`;
-  } else {
-    out.textContent = `❌ Sbagliato. Risultato corretto: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
-  }
+  // tolleranza (puoi cambiare)
+  const ok = Math.abs(ans - soluzioneTec) <= 0.1;
+
+  out.textContent = ok
+    ? `✅ Corretto! (${soluzioneTec.toFixed(2)} ${unitaTec})`
+    : `❌ Sbagliato. Risultato corretto: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
 }
 
 // ======================
@@ -1019,6 +1038,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
