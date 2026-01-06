@@ -565,90 +565,75 @@ function checkGeo() {
 }
 
 // ======================
-// TECNOLOGIA (Ohm)
+// TECNOLOGIA
 // ======================
-let soluzioneTec = 0;
-let unitaTec = "A";
 
 function nuovoProblemaTec() {
-  // Mostra un'unica immagine di un circuito semplice (più grande)
-  const tecImg = $("tecImg");
+  const tecImg = document.getElementById("tecImg");
+  const tecText = document.getElementById("tecText");
+  const tecOut = document.getElementById("tecOut");
+  const tecAns = document.getElementById("tecAns");
+
+  // Mostra una sola immagine grande e fissa
   if (tecImg) {
-    tecImg.src = "img/circuito_semplice.png"; // assicurati di avere questa immagine nella cartella img
-    tecImg.style.width = "80%";
-    tecImg.style.maxWidth = "400px";
-    tecImg.style.margin = "15px auto";
+    tecImg.src = "img/circuito_semplice.png"; // metti la tua immagine qui
+    tecImg.style.width = "100%";
+    tecImg.style.maxWidth = "500px";
     tecImg.style.display = "block";
+    tecImg.style.margin = "10px auto";
   }
 
+  // Scegli casualmente quale dato mancherà
   const missing = rInt(0, 2);
-  let V, I, R;
+  let V, I, R, testo, unita;
 
   if (missing === 0) {
-    // Trova I
+    // manca l'intensità I
     V = rInt(6, 24);
-    R = rInt(2, 30);
+    R = rInt(2, 20);
     I = V / R;
-    soluzioneTec = I; unitaTec = "A";
+    testo = `Dati:\n• Tensione V = ${V} V\n• Resistenza R = ${R} Ω\n\nTrova l’intensità (I).`;
+    soluzioneTec = I;
+    unita = "A";
   } else if (missing === 1) {
-    // Trova V
-    R = rInt(2, 30);
-    const num = rInt(1, 30), den = rInt(2, 10);
-    I = num / den;
+    // manca la tensione V
+    I = (rInt(10, 40) / 10).toFixed(1);
+    R = rInt(2, 20);
     V = I * R;
-    soluzioneTec = V; unitaTec = "V";
+    testo = `Dati:\n• Intensità I = ${I} A\n• Resistenza R = ${R} Ω\n\nTrova la tensione (V).`;
+    soluzioneTec = V;
+    unita = "V";
   } else {
-    // Trova R
+    // manca la resistenza R
     V = rInt(6, 24);
-    const num = rInt(1, 30), den = rInt(2, 10);
-    I = num / den;
+    I = (rInt(10, 40) / 10).toFixed(1);
     R = V / I;
-    soluzioneTec = R; unitaTec = "Ω";
+    testo = `Dati:\n• Tensione V = ${V} V\n• Intensità I = ${I} A\n\nTrova la resistenza (R).`;
+    soluzioneTec = R;
+    unita = "Ω";
   }
 
-  const Vshow = Number(V.toFixed(2));
-  const Ishow = Number(I.toFixed(2));
-  const Rshow = Number(R.toFixed(2));
-
-  // Testo solo con dati e domanda
-  let testo = "Dati:\n";
-  if (missing === 0) testo += `- V = ${Vshow} V\n- R = ${Rshow} Ω\n\nDomanda: trova I (A).`;
-  if (missing === 1) testo += `- I = ${Ishow} A\n- R = ${Rshow} Ω\n\nDomanda: trova V (V).`;
-  if (missing === 2) testo += `- V = ${Vshow} V\n- I = ${Ishow} A\n\nDomanda: trova R (Ω).`;
-
-  setText("tecText", testo);
-  if ($("tecAns")) $("tecAns").value = "";
-  setText("tecOut", "");
+  tecText.textContent = testo;
+  tecAns.value = "";
+  tecOut.textContent = "";
+  unitaTec = unita;
 }
 
-  const Vshow = Number(V.toFixed(2));
-  const Ishow = Number(I.toFixed(2));
-  const Rshow = Number(R.toFixed(2));
-
-  const tipoTxt = (circuitType === 0) ? "SERIE" : "PARALLELO";
-  let testo = `Circuito con 2 lampadine (${tipoTxt}).\n\n`;
-
-  if (missing === 0) testo += `Dati:\n- V = ${Vshow} V\n- R = ${Rshow} Ω\n\nDOMANDA: Qual è I (A)?`;
-  if (missing === 1) testo += `Dati:\n- I = ${Ishow} A\n- R = ${Rshow} Ω\n\nDOMANDA: Qual è V (V)?`;
-  if (missing === 2) testo += `Dati:\n- V = ${Vshow} V\n- I = ${Ishow} A\n\nDOMANDA: Qual è R (Ω)?`;
-
-  safeGet("tecText").textContent = testo;
-  safeGet("tecAns").value = "";
-  safeGet("tecOut").textContent = "";
-}
-
+// Funzione di controllo risposta
 function checkTec() {
-  const raw = safeGet("tecAns").value.trim().replace(",", ".");
-  const n = parseFloat(raw);
-  if (Number.isNaN(n)) {
-    safeGet("tecOut").textContent = "Inserisci un numero valido.";
+  const ans = parseFloat(document.getElementById("tecAns").value.replace(",", "."));
+  const out = document.getElementById("tecOut");
+
+  if (isNaN(ans)) {
+    out.textContent = "Inserisci un numero valido.";
     return;
   }
-  if (Math.abs(n - soluzioneTec) < 0.05) {
-    safeGet("tecOut").textContent = "✅ Corretto!";
+
+  const diff = Math.abs(ans - soluzioneTec);
+  if (diff <= 0.1) {
+    out.textContent = `✅ Corretto! (${soluzioneTec.toFixed(2)} ${unitaTec})`;
   } else {
-    safeGet("tecOut").textContent =
-      `❌ Sbagliato\nRisposta corretta: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
+    out.textContent = `❌ Sbagliato. Risultato corretto: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
   }
 }
 
@@ -1037,4 +1022,5 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
