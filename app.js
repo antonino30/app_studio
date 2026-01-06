@@ -570,53 +570,50 @@ function checkGeo() {
 
 function nuovoProblemaTec() {
   const tecImg = document.getElementById("tecImg");
-  const tecText = document.getElementById("tecText");
-  const tecOut = document.getElementById("tecOut");
-  const tecAns = document.getElementById("tecAns");
 
-  // Mostra una sola immagine grande e fissa
+  // UNA SOLA IMMAGINE FISSA
   if (tecImg) {
-    tecImg.src = "img/circuito_semplice.png"; // metti la tua immagine qui
-    tecImg.style.width = "100%";
-    tecImg.style.maxWidth = "500px";
-    tecImg.style.display = "block";
-    tecImg.style.margin = "10px auto";
+    tecImg.src = "img/circuito_semplice.png";
   }
 
-  // Scegli casualmente quale dato mancherà
   const missing = rInt(0, 2);
-  let V, I, R, testo, unita;
+  let V, I, R;
 
   if (missing === 0) {
-    // manca l'intensità I
     V = rInt(6, 24);
-    R = rInt(2, 20);
+    R = rInt(2, 30);
     I = V / R;
-    testo = `Dati:\n• Tensione V = ${V} V\n• Resistenza R = ${R} Ω\n\nTrova l’intensità (I).`;
     soluzioneTec = I;
-    unita = "A";
-  } else if (missing === 1) {
-    // manca la tensione V
-    I = (rInt(10, 40) / 10).toFixed(1);
-    R = rInt(2, 20);
+    unitaTec = "A";
+  } 
+  else if (missing === 1) {
+    R = rInt(2, 30);
+    I = rInt(1, 20) / rInt(2, 10);
     V = I * R;
-    testo = `Dati:\n• Intensità I = ${I} A\n• Resistenza R = ${R} Ω\n\nTrova la tensione (V).`;
     soluzioneTec = V;
-    unita = "V";
-  } else {
-    // manca la resistenza R
+    unitaTec = "V";
+  } 
+  else {
     V = rInt(6, 24);
-    I = (rInt(10, 40) / 10).toFixed(1);
+    I = rInt(1, 20) / rInt(2, 10);
     R = V / I;
-    testo = `Dati:\n• Tensione V = ${V} V\n• Intensità I = ${I} A\n\nTrova la resistenza (R).`;
     soluzioneTec = R;
-    unita = "Ω";
+    unitaTec = "Ω";
   }
 
-  tecText.textContent = testo;
-  tecAns.value = "";
-  tecOut.textContent = "";
-  unitaTec = unita;
+  const testo = `
+DATI:
+- V = ${V ? V.toFixed(2) : "?"} V
+- I = ${I ? I.toFixed(2) : "?"} A
+- R = ${R ? R.toFixed(2) : "?"} Ω
+
+DOMANDA:
+Trova il valore mancante.
+  `.trim();
+
+  document.getElementById("tecText").textContent = testo;
+  document.getElementById("tecAns").value = "";
+  document.getElementById("tecOut").textContent = "";
 }
 
 // Funzione di controllo risposta
@@ -1022,5 +1019,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
