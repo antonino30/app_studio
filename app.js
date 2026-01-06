@@ -571,31 +571,55 @@ let soluzioneTec = 0;
 let unitaTec = "A";
 
 function nuovoProblemaTec() {
-  const circuitType = rInt(0, 1);
-  const tecImg = safeGet("tecImg");
-  if (tecImg) tecImg.src = (circuitType === 0) ? "img/serie.png" : "img/parallelo.png";
+  // Mostra un'unica immagine di un circuito semplice (più grande)
+  const tecImg = $("tecImg");
+  if (tecImg) {
+    tecImg.src = "img/circuito_semplice.png"; // assicurati di avere questa immagine nella cartella img
+    tecImg.style.width = "80%";
+    tecImg.style.maxWidth = "400px";
+    tecImg.style.margin = "15px auto";
+    tecImg.style.display = "block";
+  }
 
   const missing = rInt(0, 2);
   let V, I, R;
 
   if (missing === 0) {
+    // Trova I
     V = rInt(6, 24);
     R = rInt(2, 30);
     I = V / R;
     soluzioneTec = I; unitaTec = "A";
   } else if (missing === 1) {
+    // Trova V
     R = rInt(2, 30);
     const num = rInt(1, 30), den = rInt(2, 10);
     I = num / den;
     V = I * R;
     soluzioneTec = V; unitaTec = "V";
   } else {
+    // Trova R
     V = rInt(6, 24);
     const num = rInt(1, 30), den = rInt(2, 10);
     I = num / den;
     R = V / I;
     soluzioneTec = R; unitaTec = "Ω";
   }
+
+  const Vshow = Number(V.toFixed(2));
+  const Ishow = Number(I.toFixed(2));
+  const Rshow = Number(R.toFixed(2));
+
+  // Testo solo con dati e domanda
+  let testo = "Dati:\n";
+  if (missing === 0) testo += `- V = ${Vshow} V\n- R = ${Rshow} Ω\n\nDomanda: trova I (A).`;
+  if (missing === 1) testo += `- I = ${Ishow} A\n- R = ${Rshow} Ω\n\nDomanda: trova V (V).`;
+  if (missing === 2) testo += `- V = ${Vshow} V\n- I = ${Ishow} A\n\nDomanda: trova R (Ω).`;
+
+  setText("tecText", testo);
+  if ($("tecAns")) $("tecAns").value = "";
+  setText("tecOut", "");
+}
 
   const Vshow = Number(V.toFixed(2));
   const Ishow = Number(I.toFixed(2));
@@ -1013,3 +1037,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
