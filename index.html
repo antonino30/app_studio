@@ -304,52 +304,65 @@
     <pre id="geogOut" class="out"></pre>
   </section>
 
-  <!-- MUSICA -->
-  <section id="screenMus" class="card" style="display:none;">
-    <header class="header">
-      <div>
-        <h1>Musica</h1>
-        <p>Ascolta il brano e scrivi: titolo, autore, strumenti, film (o “non c’è”).</p>
-      </div>
-      <div class="badge">Audio</div>
-    </header>
-
-    <div class="row">
-      <button class="btn" id="backHomeMus">(Indietro)</button>
-      <button class="btnPrimary" id="btnNewMus">Nuovo brano</button>
-      <button class="btn" id="btnPlayMus">Play</button>
+<!-- MUSICA -->
+<section id="screenMus" class="card" style="display:none;">
+  <header class="header">
+    <div>
+      <h1>Musica</h1>
+      <p>Seleziona i brani, poi ascolta e rispondi: titolo, autore, strumenti, film (o “non c’è”).</p>
     </div>
+    <div class="badge">Audio</div>
+  </header>
 
-    <audio id="musicPlayer" controls preload="none"></audio>
+  <div class="row">
+    <button class="btn" id="backHomeMus">(Indietro)</button>
+    <button class="btnPrimary" id="btnNewMus">Nuovo brano</button>
+    <button class="btn" id="btnPlayMus">Play</button>
+  </div>
 
-    <div class="inputs">
-      <div class="input">
-        <span>Titolo</span>
-        <input id="musTitolo" placeholder="Titolo">
+  <!-- SELEZIONE BRANI (come Arte) -->
+  <section class="filters">
+    <div class="filtersTop">
+      <div class="searchBox">
+        <span class="icon">🔎</span>
+        <input id="musSearch" placeholder="Cerca brano (es. mozart, take five, chopin)" />
       </div>
-      <div class="input">
-        <span>Autore</span>
-        <input id="musAutore" placeholder="Autore">
-      </div>
-      <div class="input">
-        <span>Strumenti (separati da virgola)</span>
-        <input id="musStrumenti" placeholder="Es: pianoforte, sax, batteria">
-      </div>
-      <div class="input">
-        <span>Film (oppure: non c’è)</span>
-        <input id="musFilm" placeholder="Es: non c’è">
+
+      <div class="filtersBtns">
+        <button id="musSelAll" class="btnSmall" type="button">Tutti</button>
+        <button id="musSelNone" class="btnSmall" type="button">Nessuno</button>
+        <button id="musApply" class="btnPrimary" type="button">Applica</button>
       </div>
     </div>
 
-    <div class="row">
-      <button class="btnPrimary" id="btnCheckMus">Controlla</button>
-    </div>
-
-    <pre id="musOut" class="out"></pre>
+    <div id="musList" class="artList"></div>
+    <div id="musInfo" class="artInfo"></div>
   </section>
 
-</main>
+  <audio id="musicPlayer" controls preload="none"></audio>
 
-<script src="app.js"></script>
-</body>
-  </html>
+  <div class="inputs">
+    <div class="input">
+      <span>Titolo</span>
+      <input id="musTitolo" placeholder="Titolo">
+    </div>
+    <div class="input">
+      <span>Autore</span>
+      <input id="musAutore" placeholder="Autore">
+    </div>
+    <div class="input">
+      <span>Strumenti (separati da virgola)</span>
+      <input id="musStrumenti" placeholder="Es: pianoforte, sax, batteria">
+    </div>
+    <div class="input">
+      <span>Film (oppure: non c’è)</span>
+      <input id="musFilm" placeholder="Es: non c’è">
+    </div>
+  </div>
+
+  <div class="row">
+    <button class="btnPrimary" id="btnCheckMus">Controlla</button>
+  </div>
+
+  <pre id="musOut" class="out"></pre>
+</section>
