@@ -5,7 +5,7 @@ function rInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function shuffle(arr) {
+function shuffleCopy(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -14,14 +14,32 @@ function shuffle(arr) {
   return a;
 }
 
+function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function normText(s) {
   return (s ?? "")
     .toString()
     .toLowerCase()
     .trim()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // toglie accenti
-    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")      // articoli
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // accenti
+    .replace(/^(il|lo|la|l'|i|gli|le)\s+/i, "")      // articoli IT
     .replace(/\s+/g, " ");                           // spazi
+}
+
+function safeGet(id) {
+  return document.getElementById(id);
+}
+
+function onClick(id, fn) {
+  const el = safeGet(id);
+  if (!el) return;
+  el.addEventListener("click", fn);
 }
 
 function showScreen(name) {
@@ -36,11 +54,11 @@ function showScreen(name) {
   };
 
   Object.values(map).forEach(id => {
-    const el = document.getElementById(id);
+    const el = safeGet(id);
     if (el) el.style.display = "none";
   });
 
-  const target = document.getElementById(map[name]);
+  const target = safeGet(map[name]);
   if (target) target.style.display = "block";
 }
 
@@ -48,20 +66,19 @@ function showScreen(name) {
 // CALCOLATRICI
 // ======================
 function calcAppend(displayId, v) {
-  const el = document.getElementById(displayId);
+  const el = safeGet(displayId);
   if (!el) return;
   el.value += v;
 }
 function calcClear(displayId) {
-  const el = document.getElementById(displayId);
+  const el = safeGet(displayId);
   if (!el) return;
   el.value = "";
 }
 function calcEq(displayId) {
-  const el = document.getElementById(displayId);
+  const el = safeGet(displayId);
   if (!el) return;
   try {
-    // eval su input controllato dai bottoni
     el.value = eval(el.value);
   } catch {
     el.value = "Errore";
@@ -110,14 +127,14 @@ function operaId(op, i) {
 }
 
 function updateArtInfo() {
-  const info = document.getElementById("artInfo");
+  const info = safeGet("artInfo");
   if (!info) return;
   info.textContent = `Selezionati: ${selectedIds.size} su ${opere.length}`;
 }
 
 function renderArtList() {
-  const list = document.getElementById("artList");
-  const qEl = document.getElementById("artSearch");
+  const list = safeGet("artList");
+  const qEl = safeGet("artSearch");
   if (!list || !qEl) return;
 
   const q = normArte(qEl.value);
@@ -180,8 +197,8 @@ function buildArteDeckFromSelection() {
     .filter(x => selectedIds.has(x.id))
     .map(x => x.op);
 
-  const out = document.getElementById("out");
-  const imgEl = document.getElementById("artImg");
+  const out = safeGet("out");
+  const imgEl = safeGet("artImg");
 
   if (!pool.length) {
     if (out) out.textContent = "Seleziona almeno 1 quadro e premi Applica.";
@@ -192,7 +209,7 @@ function buildArteDeckFromSelection() {
     return false;
   }
 
-  mazzo = shuffle(pool);
+  mazzo = shuffleCopy(pool);
   idx = 0;
   return true;
 }
@@ -212,7 +229,7 @@ function artistaOK(risposta, soluzione) {
 }
 
 async function caricaArte() {
-  const out = document.getElementById("out");
+  const out = safeGet("out");
   try {
     const r = await fetch("data.json", { cache: "no-store" });
     opere = await r.json();
@@ -226,7 +243,7 @@ async function caricaArte() {
     renderArtList();
     buildArteDeckFromSelection();
     nextArte();
-  } catch (e) {
+  } catch {
     if (out) out.textContent = "Errore caricamento data.json (controlla che sia nel repo).";
   }
 }
@@ -235,37 +252,36 @@ function nextArte() {
   if (!mazzo.length) return;
 
   if (idx >= mazzo.length) {
-    mazzo = shuffle(mazzo);
+    mazzo = shuffleCopy(mazzo);
     idx = 0;
   }
 
   corrente = mazzo[idx++];
-  const imgEl = document.getElementById("artImg");
-  const out = document.getElementById("out");
+  const imgEl = safeGet("artImg");
+  const out = safeGet("out");
 
   if (!imgEl) return;
 
   imgEl.onerror = () => {
     if (out) out.textContent =
       "Immagine non trovata: " + (corrente?.img ?? "(manca path)") +
-      "\nControlla che esista la cartella img/ su GitHub e che il nome file combaci (maiuscole/minuscole).";
+      "\nControlla cartella img/ e nome file (maiuscole/minuscole).";
   };
 
-  // nel tuo data.json deve essere tipo: "img/gioconda.jpg"
   imgEl.src = corrente.img;
 
   if (out) out.textContent = "";
-  document.getElementById("inTitolo").value = "";
-  document.getElementById("inArtista").value = "";
-  document.getElementById("inData").value = "";
+  if (safeGet("inTitolo")) safeGet("inTitolo").value = "";
+  if (safeGet("inArtista")) safeGet("inArtista").value = "";
+  if (safeGet("inData")) safeGet("inData").value = "";
 }
 
 function checkArte() {
   if (!corrente) return;
 
-  const t = document.getElementById("inTitolo").value;
-  const a = document.getElementById("inArtista").value;
-  const d = document.getElementById("inData").value;
+  const t = safeGet("inTitolo")?.value ?? "";
+  const a = safeGet("inArtista")?.value ?? "";
+  const d = safeGet("inData")?.value ?? "";
 
   let punti = 0;
   const listaTitoli = Array.isArray(corrente.titoli) ? corrente.titoli : [corrente.titolo];
@@ -274,7 +290,7 @@ function checkArte() {
   if (artistaOK(a, corrente.artista)) punti++;
   if (normArte(d) === normArte(corrente.data)) punti++;
 
-  document.getElementById("out").textContent =
+  safeGet("out").textContent =
     `Punteggio: ${punti}/3\n` +
     `Titoli accettati: ${listaTitoli.join(" / ")}\n` +
     `Artista: ${corrente.artista}\n` +
@@ -282,9 +298,9 @@ function checkArte() {
 }
 
 // ======================
-// MATEMATICA (MONOMI)
+// MATEMATICA (MONOMI DIFFICILI)
 // ======================
-let soluzioneMath = null; // {num, den, exp}
+let soluzioneMath = null;
 
 function gcd(a, b) {
   a = Math.abs(a); b = Math.abs(b);
@@ -466,23 +482,23 @@ function nuovaEspressione() {
   }
 
   soluzioneMath = sol;
-  document.getElementById("mathExpr").textContent = expr;
-  document.getElementById("mathAns").value = "";
-  document.getElementById("mathOut").textContent =
+  safeGet("mathExpr").textContent = expr;
+  safeGet("mathAns").value = "";
+  safeGet("mathOut").textContent =
     "Scrivi il monomio semplificato (es: 6x^4, -3/2x^2, 5x, 12).";
 }
 
 function checkMath() {
-  const user = parseUserMonomial(document.getElementById("mathAns").value);
+  const user = parseUserMonomial(safeGet("mathAns").value);
   if (!user) {
-    document.getElementById("mathOut").textContent =
+    safeGet("mathOut").textContent =
       "Risposta non valida. Esempi: 6x^4, -3/2x^2, 5x, 12.";
     return;
   }
   if (sameMonomial(user, soluzioneMath)) {
-    document.getElementById("mathOut").textContent = "✅ Corretto!";
+    safeGet("mathOut").textContent = "✅ Corretto!";
   } else {
-    document.getElementById("mathOut").textContent =
+    safeGet("mathOut").textContent =
       `❌ Sbagliato\nRisposta corretta: ${monoToAnswer(soluzioneMath)}`;
   }
 }
@@ -527,22 +543,22 @@ function nuovoProblemaGeo() {
   }
 
   soluzioneGeo = Math.round(sol * 2) / 2;
-  document.getElementById("geoText").textContent = testo;
-  document.getElementById("geoAns").value = "";
-  document.getElementById("geoOut").textContent = "";
+  safeGet("geoText").textContent = testo;
+  safeGet("geoAns").value = "";
+  safeGet("geoOut").textContent = "";
 }
 
 function checkGeo() {
-  const raw = document.getElementById("geoAns").value.trim().replace(",", ".");
+  const raw = safeGet("geoAns").value.trim().replace(",", ".");
   const n = parseFloat(raw);
   if (Number.isNaN(n)) {
-    document.getElementById("geoOut").textContent = "Inserisci un numero valido.";
+    safeGet("geoOut").textContent = "Inserisci un numero valido.";
     return;
   }
   if (Math.abs(n - soluzioneGeo) <= 0.9) {
-    document.getElementById("geoOut").textContent = "✅ Corretto!";
+    safeGet("geoOut").textContent = "✅ Corretto!";
   } else {
-    document.getElementById("geoOut").textContent =
+    safeGet("geoOut").textContent =
       `❌ Sbagliato\nRisultato corretto: ${soluzioneGeo}`;
   }
 }
@@ -555,7 +571,7 @@ let unitaTec = "A";
 
 function nuovoProblemaTec() {
   const circuitType = rInt(0, 1);
-  const tecImg = document.getElementById("tecImg");
+  const tecImg = safeGet("tecImg");
   if (tecImg) tecImg.src = (circuitType === 0) ? "img/serie.png" : "img/parallelo.png";
 
   const missing = rInt(0, 2);
@@ -591,22 +607,22 @@ function nuovoProblemaTec() {
   if (missing === 1) testo += `Dati:\n- I = ${Ishow} A\n- R = ${Rshow} Ω\n\nDOMANDA: Qual è V (V)?`;
   if (missing === 2) testo += `Dati:\n- V = ${Vshow} V\n- I = ${Ishow} A\n\nDOMANDA: Qual è R (Ω)?`;
 
-  document.getElementById("tecText").textContent = testo;
-  document.getElementById("tecAns").value = "";
-  document.getElementById("tecOut").textContent = "";
+  safeGet("tecText").textContent = testo;
+  safeGet("tecAns").value = "";
+  safeGet("tecOut").textContent = "";
 }
 
 function checkTec() {
-  const raw = document.getElementById("tecAns").value.trim().replace(",", ".");
+  const raw = safeGet("tecAns").value.trim().replace(",", ".");
   const n = parseFloat(raw);
   if (Number.isNaN(n)) {
-    document.getElementById("tecOut").textContent = "Inserisci un numero valido.";
+    safeGet("tecOut").textContent = "Inserisci un numero valido.";
     return;
   }
   if (Math.abs(n - soluzioneTec) < 0.05) {
-    document.getElementById("tecOut").textContent = "✅ Corretto!";
+    safeGet("tecOut").textContent = "✅ Corretto!";
   } else {
-    document.getElementById("tecOut").textContent =
+    safeGet("tecOut").textContent =
       `❌ Sbagliato\nRisposta corretta: ${soluzioneTec.toFixed(2)} ${unitaTec}`;
   }
 }
@@ -634,62 +650,48 @@ let geogCurrent = null;
 
 function nuovaDomandaGeog() {
   const item = AFRICA[rInt(0, AFRICA.length - 1)];
-  const dir = rInt(0, 1); // 0: stato->capitale, 1: capitale->stato
+  const dir = rInt(0, 1);
 
-  if (dir === 0) {
-    geogCurrent = { q: `Qual è la capitale di: ${item.country}?`, a: item.capital };
-  } else {
-    geogCurrent = { q: `Di che Stato è capitale: ${item.capital}?`, a: item.country };
-  }
+  geogCurrent = (dir === 0)
+    ? { q: `Qual è la capitale di: ${item.country}?`, a: item.capital }
+    : { q: `Di che Stato è capitale: ${item.capital}?`, a: item.country };
 
-  document.getElementById("geogText").textContent = geogCurrent.q;
-  document.getElementById("geogAns").value = "";
-  document.getElementById("geogOut").textContent = "";
+  safeGet("geogText").textContent = geogCurrent.q;
+  safeGet("geogAns").value = "";
+  safeGet("geogOut").textContent = "";
 }
 
 function checkGeog() {
   if (!geogCurrent) return;
-  const ans = normText(document.getElementById("geogAns").value);
+  const ans = normText(safeGet("geogAns").value);
   const sol = normText(geogCurrent.a);
 
   if (!ans) {
-    document.getElementById("geogOut").textContent = "Scrivi una risposta.";
+    safeGet("geogOut").textContent = "Scrivi una risposta.";
     return;
   }
 
   const ok = (ans === sol) || sol.includes(ans) || ans.includes(sol);
-  document.getElementById("geogOut").textContent = ok
+  safeGet("geogOut").textContent = ok
     ? "✅ Corretto!"
     : `❌ Sbagliato\nRisposta corretta: ${geogCurrent.a}`;
 }
 
 // ======================
-// MUSICA (NO RIPETIZIONI: deck come Arte)
+// MUSICA (deck NO RIPETIZIONI come Arte)
 // ======================
 let brani = [];
-let branoCorrente = null;
-
-// deck
 let musDeck = [];
 let musIdx = 0;
-
-function shuffleInPlace(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
+let branoCorrente = null;
 
 async function caricaMusica() {
-  const out = document.getElementById("musOut");
+  const out = safeGet("musOut");
   try {
     const r = await fetch("music.json", { cache: "no-store" });
     brani = await r.json();
     if (!Array.isArray(brani)) brani = [];
-
-    // crea deck iniziale
-    musDeck = shuffleInPlace([...brani]);
+    musDeck = shuffleCopy(brani);
     musIdx = 0;
 
     if (!brani.length && out) out.textContent = "❌ music.json è vuoto o non valido.";
@@ -702,62 +704,62 @@ async function caricaMusica() {
 }
 
 function nextBranoMus() {
-  const out = document.getElementById("musOut");
-  const player = document.getElementById("musicPlayer");
+  const out = safeGet("musOut");
+  const player = safeGet("musicPlayer");
+  if (!player) return;
 
   if (!brani.length) {
-    out.textContent = "❌ music.json è vuoto oppure non si carica.";
+    if (out) out.textContent = "❌ music.json è vuoto oppure non si carica.";
     return;
   }
 
-  // se deck finito, rimischia e riparti
   if (!musDeck.length || musIdx >= musDeck.length) {
-    musDeck = shuffleInPlace([...brani]);
+    musDeck = shuffleCopy(brani);
     musIdx = 0;
   }
 
   branoCorrente = musDeck[musIdx++];
 
-  // reset input
-  document.getElementById("musTitolo").value = "";
-  document.getElementById("musAutore").value = "";
-  document.getElementById("musStrumenti").value = "";
-  document.getElementById("musFilm").value = "";
+  safeGet("musTitolo").value = "";
+  safeGet("musAutore").value = "";
+  safeGet("musStrumenti").value = "";
+  safeGet("musFilm").value = "";
 
-  // carica audio
-  player.src = branoCorrente.file; // es: "audio/take_five.mp3"
+  player.src = branoCorrente.file;   // es: "audio/take_five.mp3"
   player.load();
 
-  out.textContent = "Premi Play e poi rispondi.";
+  if (out) out.textContent = "Premi Play e poi rispondi.";
 
   player.onerror = () => {
-    out.textContent =
-      "❌ Audio non trovato o non supportato: " + branoCorrente.file +
+    if (out) out.textContent =
+      "❌ Audio non trovato: " + branoCorrente.file +
       "\nControlla che il file esista su GitHub e che il nome sia IDENTICO (maiuscole/minuscole).";
   };
 }
 
 function playMus() {
-  const out = document.getElementById("musOut");
-  const player = document.getElementById("musicPlayer");
+  const out = safeGet("musOut");
+  const player = safeGet("musicPlayer");
+  if (!player) return;
+
   player.play().catch(() => {
-    out.textContent =
-      "⚠️ Il browser ha bloccato la riproduzione automatica.\nPremi Play direttamente nel player audio (sotto).";
+    if (out) out.textContent =
+      "⚠️ Il browser ha bloccato l'autoplay.\nPremi Play direttamente nel player audio.";
   });
 }
 
 function checkMus() {
-  const out = document.getElementById("musOut");
+  const out = safeGet("musOut");
   if (!branoCorrente) {
-    out.textContent = "Premi “Nuovo brano” prima.";
+    if (out) out.textContent = "Premi “Nuovo brano” prima.";
     return;
   }
 
-  const t = normText(document.getElementById("musTitolo").value);
-  const a = normText(document.getElementById("musAutore").value);
-  const f = normText(document.getElementById("musFilm").value);
+  const t = normText(safeGet("musTitolo").value);
+  const a = normText(safeGet("musAutore").value);
+  const f = normText(safeGet("musFilm").value);
 
-  const userStr = document.getElementById("musStrumenti").value
+  const userStr = safeGet("musStrumenti").value
     .toLowerCase()
     .split(",")
     .map(x => x.trim())
@@ -783,7 +785,7 @@ function checkMus() {
 
   const punti = (okTit ? 1 : 0) + (okAut ? 1 : 0) + (okStr ? 1 : 0) + (okFilm ? 1 : 0);
 
-  out.textContent =
+  if (out) out.textContent =
     `Punteggio: ${punti}/4\n` +
     `Titolo: ${branoCorrente.titolo}\n` +
     `Autore: ${branoCorrente.autore}\n` +
@@ -792,90 +794,93 @@ function checkMus() {
 }
 
 // ======================
-// EVENTI
+// EVENTI (BIND BOTTONI)
 // ======================
 document.addEventListener("DOMContentLoaded", () => {
   showScreen("home");
   bindCalculators();
 
   // HOME -> schermate
-  document.getElementById("goArte").addEventListener("click", async () => {
+  onClick("goArte", async () => {
     showScreen("arte");
     if (!opere.length) await caricaArte();
   });
 
-  document.getElementById("goMat").addEventListener("click", () => {
+  onClick("goMat", () => {
     showScreen("mat");
     nuovaEspressione();
   });
 
-  document.getElementById("goTec").addEventListener("click", () => {
+  onClick("goTec", () => {
     showScreen("tec");
     nuovoProblemaTec();
   });
 
-  document.getElementById("goGeo").addEventListener("click", () => {
+  onClick("goGeo", () => {
     showScreen("geo");
     nuovoProblemaGeo();
   });
 
-  document.getElementById("goGeog").addEventListener("click", () => {
+  onClick("goGeog", () => {
     showScreen("geog");
     nuovaDomandaGeog();
   });
 
-  document.getElementById("goMus").addEventListener("click", async () => {
+  onClick("goMus", async () => {
     showScreen("mus");
     if (!brani.length) await caricaMusica();
     nextBranoMus();
   });
 
-  // back
-  document.getElementById("backHomeArte").addEventListener("click", () => showScreen("home"));
-  document.getElementById("backHomeMat").addEventListener("click", () => showScreen("home"));
-  document.getElementById("backHomeTec").addEventListener("click", () => showScreen("home"));
-  document.getElementById("backHomeGeo").addEventListener("click", () => showScreen("home"));
-  document.getElementById("backHomeGeog").addEventListener("click", () => showScreen("home"));
-  document.getElementById("backHomeMus").addEventListener("click", () => showScreen("home"));
+  // BACK
+  onClick("backHomeArte", () => showScreen("home"));
+  onClick("backHomeMat",  () => showScreen("home"));
+  onClick("backHomeTec",  () => showScreen("home"));
+  onClick("backHomeGeo",  () => showScreen("home"));
+  onClick("backHomeGeog", () => showScreen("home"));
+  onClick("backHomeMus",  () => showScreen("home"));
 
   // ARTE
-  document.getElementById("btnStart").addEventListener("click", nextArte);
-  document.getElementById("btnNext").addEventListener("click", nextArte);
-  document.getElementById("btnCheck").addEventListener("click", checkArte);
-  document.getElementById("artSearch").addEventListener("input", renderArtList);
-  document.getElementById("artSelAll").addEventListener("click", () => {
+  onClick("btnStart", nextArte);
+  onClick("btnNext",  nextArte);
+  onClick("btnCheck", checkArte);
+
+  const artSearch = safeGet("artSearch");
+  if (artSearch) artSearch.addEventListener("input", renderArtList);
+
+  onClick("artSelAll", () => {
     selectedIds = new Set(opere.map((op, i) => operaId(op, i)));
     renderArtList();
   });
-  document.getElementById("artSelNone").addEventListener("click", () => {
+
+  onClick("artSelNone", () => {
     selectedIds = new Set();
     renderArtList();
   });
-  document.getElementById("artApply").addEventListener("click", () => {
+
+  onClick("artApply", () => {
     const ok = buildArteDeckFromSelection();
     if (ok) nextArte();
   });
 
   // MAT
-  document.getElementById("btnNewMath").addEventListener("click", nuovaEspressione);
-  document.getElementById("btnCheckMath").addEventListener("click", checkMath);
+  onClick("btnNewMath",   nuovaEspressione);
+  onClick("btnCheckMath", checkMath);
 
   // TEC
-  document.getElementById("btnNewTec").addEventListener("click", nuovoProblemaTec);
-  document.getElementById("btnCheckTec").addEventListener("click", checkTec);
+  onClick("btnNewTec",   nuovoProblemaTec);
+  onClick("btnCheckTec", checkTec);
 
   // GEO
-  document.getElementById("btnNewGeo").addEventListener("click", nuovoProblemaGeo);
-  document.getElementById("btnCheckGeo").addEventListener("click", checkGeo);
+  onClick("btnNewGeo",   nuovoProblemaGeo);
+  onClick("btnCheckGeo", checkGeo);
 
   // GEOG
-  document.getElementById("btnNewGeog").addEventListener("click", nuovaDomandaGeog);
-  document.getElementById("btnCheckGeog").addEventListener("click", checkGeog);
+  onClick("btnNewGeog",   nuovaDomandaGeog);
+  onClick("btnCheckGeog", checkGeog);
 
   // MUS
-  document.getElementById("btnNewMus").addEventListener("click", nextBranoMus);
-  document.getElementById("btnPlayMus").addEventListener("click", playMus);
-  document.getElementById("btnCheckMus").addEventListener("click", checkMus);
+  onClick("btnNewMus",   nextBranoMus);
+  onClick("btnPlayMus",  playMus);
+  onClick("btnCheckMus", checkMus);
 });
-
-
