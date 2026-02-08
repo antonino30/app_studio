@@ -299,13 +299,14 @@ function checkArte() {
 }
 
 // ======================
-// MATEMATICA (ESPRESSIONI da math.json) (casuale senza ripetizioni)
-// confronto per valutazione su valori casuali (multi-variabile)
+// MATEMATICA (ESPRESSIONI da math.json)
+// Casuale senza ripetizioni + verifica per valutazione (multi-variabile)
+// Supporta simboli Unicode: 𝑥 𝑦 𝑎 𝑏, −, ∙, ∶, [] ecc.
 // ======================
 let MATH_BANK = [];
-let currentMath = null;
 let mathDeck = [];
 let mathIdx = 0;
+let currentMath = null;
 
 function buildMathDeck() {
   mathDeck = shuffleCopy(MATH_BANK);
@@ -316,72 +317,95 @@ async function caricaMathBank() {
   const out = safeGet("mathOut");
   try {
     const r = await fetch("math.json", { cache: "no-store" });
-    MATH_BANK = await r.json();
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
-    if (!Array.isArray(MATH_BANK) || MATH_BANK.length === 0) {
+    const data = await r.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
       MATH_BANK = [];
       mathDeck = [];
       mathIdx = 0;
-      if (out) out.textContent = "❌ math.json è vuoto o non valido.";
+      if (out) out.textContent = "❌ math.json è vuoto o non è un array di esercizi.";
       return false;
     }
 
+    // valida struttura minima
+    const cleaned = data.filter(x => x && typeof x.q === "string" && typeof x.a === "string");
+    if (!cleaned.length) {
+      MATH_BANK = [];
+      mathDeck = [];
+      mathIdx = 0;
+      if (out) out.textContent = "❌ math.json non contiene oggetti del tipo { q: \"...\", a: \"...\" }.";
+      return false;
+    }
+
+    MATH_BANK = cleaned;
     buildMathDeck();
     return true;
-  } catch {
+  } catch (e) {
     MATH_BANK = [];
     mathDeck = [];
     mathIdx = 0;
-    if (out) out.textContent = "❌ math.json non trovato o non valido.";
+
+    const msg =
+      "❌ math.json non trovato o non valido.\n" +
+      "Se stai aprendo index.html con doppio click (file://), usa Live Server o GitHub Pages.\n" +
+      (e?.message ? `Dettaglio: ${e.message}` : "");
+
+    if (out) out.textContent = msg;
     return false;
   }
 }
 
-// Normalizza simboli “strani” e rende l’espressione valutabile in JS
+// ---------- Normalizzazione Unicode -> ASCII ----------
 function normalizeExpr(s) {
   s = (s ?? "").toString();
 
-  // 1) lettere corsive Unicode -> ASCII
+  // lettere corsive Unicode -> ASCII
   s = s
     .replace(/𝑥/g, "x")
     .replace(/𝑦/g, "y")
     .replace(/𝑎/g, "a")
     .replace(/𝑏/g, "b");
 
-  // 2) operatori Unicode -> ASCII
+  // operatori Unicode -> ASCII
   s = s
     .replace(/−/g, "-")
     .replace(/∙/g, "*")
     .replace(/·/g, "*")
     .replace(/×/g, "*")
+    .replace(/∗/g, "*")
     .replace(/∶/g, "/")
     .replace(/÷/g, "/")
     .replace(/:/g, "/");
 
-  // 3) parentesi quadre -> tonde (serve per l'esercizio con [...])
+  // parentesi quadre -> tonde
   s = s.replace(/\[/g, "(").replace(/\]/g, ")");
 
-  // 4) via spazi
+  // via spazi
   s = s.replace(/\s+/g, "");
 
   return s;
 }
 
-// Converte in una stringa JS sicura (solo numeri, variabili a b x y, parentesi e operatori)
+// ---------- Trasformazione in espressione JS valutabile ----------
 function toJsExpr(raw) {
   let s = normalizeExpr(raw);
 
-  // Consenti solo caratteri dopo normalizzazione:
-  // numeri, a b x y, + - * / ^ ( ) .
-  if (!/^[0-9abxy+\-*/^().,]+$/.test(s)) {
-    return null;
-  }
-
-  // cambia virgola decimale in punto
+  // virgola decimale -> punto
   s = s.replace(/,/g, ".");
 
+  // dopo normalizzazione, accettiamo solo questi caratteri:
+  // numeri, a b x y, + - * / ^ ( ) .
+  if (!/^[0-9abxy+\-*/^().]+$/.test(s)) return null;
+
   // moltiplicazioni implicite:
-  // 2a -> 2*a, 2(x+1) -> 2*(x+1), ab -> a*b, x^2y -> x^2*y, )a -> )*a
+  // 2a -> 2*a
+  // 2(x+1) -> 2*(x+1)
+  // ab -> a*b
+  // x^2y -> x^2*y
+  // )a -> )*a
+  // a(b) -> a*(b)
   s = s
     .replace(/(\d)([abxy(])/g, "$1*$2")
     .replace(/([abxy])(\d)/g, "$1*$2")
@@ -389,7 +413,7 @@ function toJsExpr(raw) {
     .replace(/([abxy])(\()/g, "$1*$2")
     .replace(/(\))([abxy\d])/g, "$1*$2");
 
-  // potenze: ^n -> **n
+  // potenze: ^n -> **n (solo esponente intero non-negativo)
   s = s.replace(/\^(\d+)/g, "**$1");
 
   return s;
@@ -405,19 +429,21 @@ function varsInExpr(raw) {
   return [...set];
 }
 
-function evalExpr(jsExpr, env) {
-  // jsExpr è già ripulita; env contiene a,b,x,y
-  // usiamo Function con parametri espliciti (niente accesso a scope esterno)
-  const f = new Function("a", "b", "x", "y", `return (${jsExpr});`);
+function safeEval(jsExpr, env) {
+  // Valuta solo l'espressione, passando a b x y come parametri
+  // (nessun accesso a scope esterni)
+  const f = new Function("a", "b", "x", "y", `"use strict"; return (${jsExpr});`);
   return f(env.a ?? 0, env.b ?? 0, env.x ?? 0, env.y ?? 0);
 }
 
 function approxEq(u, v) {
   if (!Number.isFinite(u) || !Number.isFinite(v)) return false;
+  // tolleranza stretta (qui dovrebbero essere polinomi)
   return Math.abs(u - v) <= 1e-9;
 }
 
-function checkByRandomTesting(userRaw, solRaw) {
+// Test numerici multipli per verificare equivalenza (evita quasi tutti i falsi positivi)
+function equivalentByTesting(userRaw, solRaw) {
   const uJS = toJsExpr(userRaw);
   const sJS = toJsExpr(solRaw);
   if (!uJS || !sJS) return { ok: false, reason: "format" };
@@ -425,20 +451,20 @@ function checkByRandomTesting(userRaw, solRaw) {
   const vars = new Set([...varsInExpr(userRaw), ...varsInExpr(solRaw)]);
   const V = [...vars];
 
-  // generiamo più test per essere sicuri
-  // evitiamo 0 troppo spesso per non “nascondere” errori
-  for (let t = 0; t < 8; t++) {
+  for (let t = 0; t < 10; t++) {
     const env = { a: 0, b: 0, x: 0, y: 0 };
+
     for (const k of V) {
-      let val = rInt(-5, 5);
-      if (val === 0) val = rInt(1, 5);
+      // evita 0 spesso e usa valori "non banali"
+      let val = rInt(-6, 6);
+      if (val === 0) val = rInt(1, 6);
       env[k] = val;
     }
 
     let u, s;
     try {
-      u = evalExpr(uJS, env);
-      s = evalExpr(sJS, env);
+      u = safeEval(uJS, env);
+      s = safeEval(sJS, env);
     } catch {
       return { ok: false, reason: "eval" };
     }
@@ -449,6 +475,7 @@ function checkByRandomTesting(userRaw, solRaw) {
   return { ok: true };
 }
 
+// ---------- UI ----------
 function nuovaEspressione() {
   const out = safeGet("mathOut");
 
@@ -458,18 +485,16 @@ function nuovaEspressione() {
     return;
   }
 
-  if (!mathDeck.length || mathIdx >= mathDeck.length) {
-    buildMathDeck();
-  }
+  if (!mathDeck.length || mathIdx >= mathDeck.length) buildMathDeck();
 
   currentMath = mathDeck[mathIdx++];
 
   safeGet("mathExpr").textContent = currentMath.q ?? "";
   safeGet("mathAns").value = "";
-  safeGet("mathOut").textContent =
+  if (out) out.textContent =
     `Esercizio ${mathIdx}/${mathDeck.length}\n` +
-    "Scrivi il risultato semplificato (puoi usare: a, b, x, y, parentesi, ^).\n" +
-    "Esempi: 7x-2y, a+4ab, -6xy+2y^2.";
+    "Scrivi il risultato semplificato.\n" +
+    "Puoi usare a, b, x, y, parentesi, ^. (Es: 7x-2y, a+4ab, -6xy+2y^2)";
 }
 
 function checkMath() {
@@ -479,21 +504,25 @@ function checkMath() {
     return;
   }
 
-  const user = safeGet("mathAns").value ?? "";
+  const user = safeGet("mathAns")?.value ?? "";
   const sol = currentMath.a ?? "";
 
-  const res = checkByRandomTesting(user, sol);
+  const res = equivalentByTesting(user, sol);
 
   if (res.ok) {
-    out.textContent = "✅ Corretto!";
-  } else {
-    const msg =
-      res.reason === "format" ? "Formato non valido (usa solo numeri, a b x y, + - * / ^ e parentesi)." :
-      res.reason === "eval"   ? "Espressione non valutabile (controlla parentesi e potenze)." :
-      "Risposta diversa dalla soluzione.";
-
-    out.textContent = `❌ Sbagliato\n(${msg})\nRisposta corretta: ${currentMath.a}`;
+    if (out) out.textContent = "✅ Corretto!";
+    return;
   }
+
+  const msg =
+    res.reason === "format"
+      ? "Formato non valido.\nUsa solo numeri, a b x y, + - * / ^ e parentesi."
+      : res.reason === "eval"
+        ? "Espressione non valutabile.\nControlla parentesi e potenze."
+        : "Risposta diversa dalla soluzione.";
+
+  if (out) out.textContent =
+    `❌ Sbagliato\n(${msg})\nRisposta corretta: ${currentMath.a}`;
 }
 
 // ======================
@@ -1021,5 +1050,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
