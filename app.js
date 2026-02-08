@@ -341,26 +341,29 @@ async function caricaMathBank() {
 function normalizeExpr(s) {
   s = (s ?? "").toString();
 
-  // lettere corsive Unicode -> ASCII
+  // 1) lettere corsive Unicode -> ASCII
   s = s
     .replace(/𝑥/g, "x")
+    .replace(/𝑦/g, "y")
     .replace(/𝑎/g, "a")
-    .replace(/𝑏/g, "b")
-    .replace(/𝑦/g, "y");
+    .replace(/𝑏/g, "b");
 
-  // operatori Unicode -> ASCII
+  // 2) operatori Unicode -> ASCII
   s = s
     .replace(/−/g, "-")
     .replace(/∙/g, "*")
     .replace(/·/g, "*")
+    .replace(/×/g, "*")
     .replace(/∶/g, "/")
-    .replace(/:/g, "/"); // se qualcuno usa : come divisione
+    .replace(/÷/g, "/")
+    .replace(/:/g, "/");
 
-  // spazi via
+  // 3) parentesi quadre -> tonde (serve per l'esercizio con [...])
+  s = s.replace(/\[/g, "(").replace(/\]/g, ")");
+
+  // 4) via spazi
   s = s.replace(/\s+/g, "");
 
-  // potenze: a^2 ok, ma in JS serve ** (useremo trasformazione)
-  // attenzione: lasciamo ^ per ora, poi la convertiamo con una regex
   return s;
 }
 
@@ -368,14 +371,17 @@ function normalizeExpr(s) {
 function toJsExpr(raw) {
   let s = normalizeExpr(raw);
 
-  // Permetti solo questi caratteri (dopo normalizzazione)
+  // Consenti solo caratteri dopo normalizzazione:
   // numeri, a b x y, + - * / ^ ( ) .
-  if (!/^[0-9abxy+\-*/^().]+$/.test(s)) {
+  if (!/^[0-9abxy+\-*/^().,]+$/.test(s)) {
     return null;
   }
 
+  // cambia virgola decimale in punto
+  s = s.replace(/,/g, ".");
+
   // moltiplicazioni implicite:
-  // 2a -> 2*a, 2(x+1) -> 2*(x+1), a(x) -> a*(x), )a -> )*a, x y -> x*y (qui non ci sono spazi ormai)
+  // 2a -> 2*a, 2(x+1) -> 2*(x+1), ab -> a*b, x^2y -> x^2*y, )a -> )*a
   s = s
     .replace(/(\d)([abxy(])/g, "$1*$2")
     .replace(/([abxy])(\d)/g, "$1*$2")
@@ -383,8 +389,7 @@ function toJsExpr(raw) {
     .replace(/([abxy])(\()/g, "$1*$2")
     .replace(/(\))([abxy\d])/g, "$1*$2");
 
-  // converte le potenze ^n in **n (solo esponente intero non-negativo)
-  // esempio: x^2 -> x**2, (a+b)^2 -> (a+b)**2
+  // potenze: ^n -> **n
   s = s.replace(/\^(\d+)/g, "**$1");
 
   return s;
@@ -1016,4 +1021,5 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
