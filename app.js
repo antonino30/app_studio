@@ -299,128 +299,13 @@ function checkArte() {
 }
 
 // ======================
-// MATEMATICA (POLINOMI da lista: math.json) (casuale senza ripetizioni)
+// MATEMATICA (ESPRESSIONI da math.json) (casuale senza ripetizioni)
+// confronto per valutazione su valori casuali (multi-variabile)
 // ======================
 let MATH_BANK = [];
 let currentMath = null;
 let mathDeck = [];
 let mathIdx = 0;
-let soluzionePoly = null;
-
-// ---- Razionali (frazioni) ----
-function gcd(a, b) {
-  a = Math.abs(a); b = Math.abs(b);
-  while (b) [a, b] = [b, a % b];
-  return a || 1;
-}
-function fracNorm(num, den) {
-  if (den < 0) { den = -den; num = -num; }
-  const g = gcd(num, den);
-  return { num: num / g, den: den / g };
-}
-function rat(num, den = 1) {
-  const f = fracNorm(num, den);
-  return { num: f.num, den: f.den };
-}
-function ratIsZero(r) { return r.num === 0; }
-function ratAdd(a, b) { return rat(a.num * b.den + b.num * a.den, a.den * b.den); }
-function ratSub(a, b) { return rat(a.num * b.den - b.num * a.den, a.den * b.den); }
-function ratEq(a, b) { return a.num === b.num && a.den === b.den; }
-
-// ---- Polinomi: Map(exp -> razionale) ----
-function polyEmpty() { return new Map(); }
-function polyFromTerms(terms) {
-  const p = polyEmpty();
-  for (const t of terms) {
-    const e = t.exp;
-    const c = t.coef;
-    p.set(e, p.has(e) ? ratAdd(p.get(e), c) : { ...c });
-    if (ratIsZero(p.get(e))) p.delete(e);
-  }
-  return p;
-}
-
-function parseRational(str) {
-  if (!str) return null;
-  str = str.trim();
-  if (!str) return null;
-
-  if (str.includes("/")) {
-    const [a, b] = str.split("/");
-    const num = parseInt(a, 10);
-    const den = parseInt(b, 10);
-    if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
-    return rat(num, den);
-  }
-
-  const val = Number(str.replace(",", "."));
-  if (!Number.isFinite(val)) return null;
-  const scaled = Math.round(val * 1000);
-  return rat(scaled, 1000);
-}
-
-function parsePolynomial(input) {
-  if (!input) return null;
-  let s = input.toLowerCase().trim();
-  if (!s) return null;
-
-  s = s.replace(/\s+/g, "");
-  s = s.replace(/\*/g, "");
-
-  // niente parentesi nella risposta: solo termini
-  if (!/^[0-9x+\-^\/\.,]+$/.test(s)) return null;
-
-  const parts = s.match(/[+\-]?[^+\-]+/g);
-  if (!parts) return null;
-
-  const terms = [];
-
-  for (let part of parts) {
-    let sign = 1;
-    if (part[0] === "+") part = part.slice(1);
-    else if (part[0] === "-") { sign = -1; part = part.slice(1); }
-
-    if (!part) return null;
-
-    const hasX = part.includes("x");
-    let coefStr = "";
-    let exp = 0;
-
-    if (!hasX) {
-      coefStr = part;
-      exp = 0;
-    } else {
-      const [beforeX, afterX = ""] = part.split("x");
-      coefStr = beforeX;
-
-      if (coefStr === "") coefStr = "1";
-
-      if (afterX === "") exp = 1;
-      else if (afterX.startsWith("^")) {
-        exp = parseInt(afterX.slice(1), 10);
-        if (!Number.isFinite(exp)) return null;
-      } else return null;
-    }
-
-    const coef = parseRational(coefStr);
-    if (!coef) return null;
-
-    terms.push({ coef: rat(coef.num * sign, coef.den), exp });
-  }
-
-  return polyFromTerms(terms);
-}
-
-function samePolynomial(a, b) {
-  if (!a || !b) return false;
-  const exps = new Set([...a.keys(), ...b.keys()]);
-  for (const e of exps) {
-    const ca = a.get(e) || rat(0, 1);
-    const cb = b.get(e) || rat(0, 1);
-    if (!ratEq(ca, cb)) return false;
-  }
-  return true;
-}
 
 function buildMathDeck() {
   mathDeck = shuffleCopy(MATH_BANK);
@@ -452,6 +337,113 @@ async function caricaMathBank() {
   }
 }
 
+// Normalizza simboli “strani” e rende l’espressione valutabile in JS
+function normalizeExpr(s) {
+  s = (s ?? "").toString();
+
+  // lettere corsive Unicode -> ASCII
+  s = s
+    .replace(/𝑥/g, "x")
+    .replace(/𝑎/g, "a")
+    .replace(/𝑏/g, "b")
+    .replace(/𝑦/g, "y");
+
+  // operatori Unicode -> ASCII
+  s = s
+    .replace(/−/g, "-")
+    .replace(/∙/g, "*")
+    .replace(/·/g, "*")
+    .replace(/∶/g, "/")
+    .replace(/:/g, "/"); // se qualcuno usa : come divisione
+
+  // spazi via
+  s = s.replace(/\s+/g, "");
+
+  // potenze: a^2 ok, ma in JS serve ** (useremo trasformazione)
+  // attenzione: lasciamo ^ per ora, poi la convertiamo con una regex
+  return s;
+}
+
+// Converte in una stringa JS sicura (solo numeri, variabili a b x y, parentesi e operatori)
+function toJsExpr(raw) {
+  let s = normalizeExpr(raw);
+
+  // Permetti solo questi caratteri (dopo normalizzazione)
+  // numeri, a b x y, + - * / ^ ( ) .
+  if (!/^[0-9abxy+\-*/^().]+$/.test(s)) {
+    return null;
+  }
+
+  // moltiplicazioni implicite:
+  // 2a -> 2*a, 2(x+1) -> 2*(x+1), a(x) -> a*(x), )a -> )*a, x y -> x*y (qui non ci sono spazi ormai)
+  s = s
+    .replace(/(\d)([abxy(])/g, "$1*$2")
+    .replace(/([abxy])(\d)/g, "$1*$2")
+    .replace(/([abxy])([abxy])/g, "$1*$2")
+    .replace(/([abxy])(\()/g, "$1*$2")
+    .replace(/(\))([abxy\d])/g, "$1*$2");
+
+  // converte le potenze ^n in **n (solo esponente intero non-negativo)
+  // esempio: x^2 -> x**2, (a+b)^2 -> (a+b)**2
+  s = s.replace(/\^(\d+)/g, "**$1");
+
+  return s;
+}
+
+function varsInExpr(raw) {
+  const s = normalizeExpr(raw);
+  const set = new Set();
+  if (s.includes("a")) set.add("a");
+  if (s.includes("b")) set.add("b");
+  if (s.includes("x")) set.add("x");
+  if (s.includes("y")) set.add("y");
+  return [...set];
+}
+
+function evalExpr(jsExpr, env) {
+  // jsExpr è già ripulita; env contiene a,b,x,y
+  // usiamo Function con parametri espliciti (niente accesso a scope esterno)
+  const f = new Function("a", "b", "x", "y", `return (${jsExpr});`);
+  return f(env.a ?? 0, env.b ?? 0, env.x ?? 0, env.y ?? 0);
+}
+
+function approxEq(u, v) {
+  if (!Number.isFinite(u) || !Number.isFinite(v)) return false;
+  return Math.abs(u - v) <= 1e-9;
+}
+
+function checkByRandomTesting(userRaw, solRaw) {
+  const uJS = toJsExpr(userRaw);
+  const sJS = toJsExpr(solRaw);
+  if (!uJS || !sJS) return { ok: false, reason: "format" };
+
+  const vars = new Set([...varsInExpr(userRaw), ...varsInExpr(solRaw)]);
+  const V = [...vars];
+
+  // generiamo più test per essere sicuri
+  // evitiamo 0 troppo spesso per non “nascondere” errori
+  for (let t = 0; t < 8; t++) {
+    const env = { a: 0, b: 0, x: 0, y: 0 };
+    for (const k of V) {
+      let val = rInt(-5, 5);
+      if (val === 0) val = rInt(1, 5);
+      env[k] = val;
+    }
+
+    let u, s;
+    try {
+      u = evalExpr(uJS, env);
+      s = evalExpr(sJS, env);
+    } catch {
+      return { ok: false, reason: "eval" };
+    }
+
+    if (!approxEq(u, s)) return { ok: false, reason: "diff" };
+  }
+
+  return { ok: true };
+}
+
 function nuovaEspressione() {
   const out = safeGet("mathOut");
 
@@ -467,50 +459,35 @@ function nuovaEspressione() {
 
   currentMath = mathDeck[mathIdx++];
 
-  const q = (currentMath.q ?? "").toString();
-  const a = (currentMath.a ?? "").toString();
-
-  const parsedSol = parsePolynomial(a);
-  if (!parsedSol) {
-    safeGet("mathExpr").textContent = q || "(esercizio senza testo)";
-    safeGet("mathOut").textContent =
-      "⚠️ Questo esercizio ha una soluzione (a) non valida in math.json.\n" +
-      "Correggi la voce 'a' (es: 3x^2-2x+1).";
-    soluzionePoly = null;
-    safeGet("mathAns").value = "";
-    return;
-  }
-
-  soluzionePoly = parsedSol;
-  safeGet("mathExpr").textContent = q;
+  safeGet("mathExpr").textContent = currentMath.q ?? "";
   safeGet("mathAns").value = "";
   safeGet("mathOut").textContent =
     `Esercizio ${mathIdx}/${mathDeck.length}\n` +
-    "Scrivi il polinomio semplificato (es: 3x^2-2x+1, -x^3+x-5, 1/2x^2+3/4x-2).";
+    "Scrivi il risultato semplificato (puoi usare: a, b, x, y, parentesi, ^).\n" +
+    "Esempi: 7x-2y, a+4ab, -6xy+2y^2.";
 }
 
 function checkMath() {
   const out = safeGet("mathOut");
-
-  if (!soluzionePoly) {
-    if (out) out.textContent = "⚠️ Nessuna soluzione valida per questo esercizio (controlla math.json).";
+  if (!currentMath) {
+    if (out) out.textContent = "Premi “Nuova” prima.";
     return;
   }
 
-  const user = parsePolynomial(safeGet("mathAns").value);
-  if (!user) {
-    if (out) out.textContent =
-      "Risposta non valida.\n" +
-      "Esempi: 3x^2-2x+1, -x^3+x-5, 1/2x^2+3/4x-2.\n" +
-      "Usa x e x^n, niente parentesi nella risposta.";
-    return;
-  }
+  const user = safeGet("mathAns").value ?? "";
+  const sol = currentMath.a ?? "";
 
-  if (samePolynomial(user, soluzionePoly)) {
+  const res = checkByRandomTesting(user, sol);
+
+  if (res.ok) {
     out.textContent = "✅ Corretto!";
   } else {
-    out.textContent =
-      `❌ Sbagliato\nRisposta corretta: ${currentMath.a}`;
+    const msg =
+      res.reason === "format" ? "Formato non valido (usa solo numeri, a b x y, + - * / ^ e parentesi)." :
+      res.reason === "eval"   ? "Espressione non valutabile (controlla parentesi e potenze)." :
+      "Risposta diversa dalla soluzione.";
+
+    out.textContent = `❌ Sbagliato\n(${msg})\nRisposta corretta: ${currentMath.a}`;
   }
 }
 
@@ -1039,3 +1016,4 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
