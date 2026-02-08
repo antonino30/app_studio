@@ -317,42 +317,31 @@ async function caricaMathBank() {
   const out = safeGet("mathOut");
   try {
     const r = await fetch("math.json", { cache: "no-store" });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-
     const data = await r.json();
 
     if (!Array.isArray(data) || data.length === 0) {
       MATH_BANK = [];
       mathDeck = [];
       mathIdx = 0;
-      if (out) out.textContent = "❌ math.json è vuoto o non è un array di esercizi.";
+      if (out) out.textContent = "Errore nel caricamento degli esercizi.";
       return false;
     }
 
-    // valida struttura minima
-    const cleaned = data.filter(x => x && typeof x.q === "string" && typeof x.a === "string");
-    if (!cleaned.length) {
-      MATH_BANK = [];
+    MATH_BANK = data.filter(x => x && typeof x.q === "string" && typeof x.a === "string");
+    if (!MATH_BANK.length) {
       mathDeck = [];
       mathIdx = 0;
-      if (out) out.textContent = "❌ math.json non contiene oggetti del tipo { q: \"...\", a: \"...\" }.";
+      if (out) out.textContent = "Errore nel caricamento degli esercizi.";
       return false;
     }
 
-    MATH_BANK = cleaned;
     buildMathDeck();
     return true;
-  } catch (e) {
+  } catch {
     MATH_BANK = [];
     mathDeck = [];
     mathIdx = 0;
-
-    const msg =
-      "❌ math.json non trovato o non valido.\n" +
-      "Se stai aprendo index.html con doppio click (file://), usa Live Server o GitHub Pages.\n" +
-      (e?.message ? `Dettaglio: ${e.message}` : "");
-
-    if (out) out.textContent = msg;
+    if (out) out.textContent = "Errore nel caricamento degli esercizi.";
     return false;
   }
 }
@@ -500,7 +489,7 @@ function nuovaEspressione() {
 function checkMath() {
   const out = safeGet("mathOut");
   if (!currentMath) {
-    if (out) out.textContent = "Premi “Nuova” prima.";
+    if (out) out.textContent = "Premi “Nuova” per iniziare.";
     return;
   }
 
@@ -511,18 +500,10 @@ function checkMath() {
 
   if (res.ok) {
     if (out) out.textContent = "✅ Corretto!";
-    return;
+  } else {
+    if (out) out.textContent =
+      `❌ Sbagliato\nRisultato corretto: ${currentMath.a}`;
   }
-
-  const msg =
-    res.reason === "format"
-      ? "Formato non valido.\nUsa solo numeri, a b x y, + - * / ^ e parentesi."
-      : res.reason === "eval"
-        ? "Espressione non valutabile.\nControlla parentesi e potenze."
-        : "Risposta diversa dalla soluzione.";
-
-  if (out) out.textContent =
-    `❌ Sbagliato\n(${msg})\nRisposta corretta: ${currentMath.a}`;
 }
 
 // ======================
@@ -1050,6 +1031,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
