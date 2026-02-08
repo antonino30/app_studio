@@ -451,59 +451,334 @@ function nuovaEspressione() {
       const m=e(), n=e();
       expr = `( ${a}x^${m} ÷ ${b} ) · ( ${cc}x^${n} ÷ ${d} )`;
       sol = monoMul(mono(a,b,m), mono(cc,d,n));
+      br// ======================
+// MATEMATICA (POLINOMI)
+// ======================
+let soluzionePoly = null;
+
+// ---- Razionali (frazioni) ----
+function gcd(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b) [a, b] = [b, a % b];
+  return a || 1;
+}
+function fracNorm(num, den) {
+  if (den < 0) { den = -den; num = -num; }
+  const g = gcd(num, den);
+  return { num: num / g, den: den / g };
+}
+function rat(num, den = 1) {
+  const f = fracNorm(num, den);
+  return { num: f.num, den: f.den };
+}
+function ratIsZero(r) { return r.num === 0; }
+function ratAdd(a, b) { return rat(a.num * b.den + b.num * a.den, a.den * b.den); }
+function ratSub(a, b) { return rat(a.num * b.den - b.num * a.den, a.den * b.den); }
+function ratMul(a, b) { return rat(a.num * b.num, a.den * b.den); }
+function ratDiv(a, b) { return rat(a.num * b.den, a.den * b.num); }
+function ratEq(a, b) { return a.num === b.num && a.den === b.den; }
+
+// ---- Polinomi: Map(exp -> razionale) ----
+function polyEmpty() { return new Map(); }
+
+function polyClone(p) {
+  const m = new Map();
+  for (const [e, c] of p.entries()) m.set(e, { ...c });
+  return m;
+}
+
+function polyAdd(p, q) {
+  const out = polyClone(p);
+  for (const [e, c] of q.entries()) {
+    out.set(e, out.has(e) ? ratAdd(out.get(e), c) : { ...c });
+    if (ratIsZero(out.get(e))) out.delete(e);
+  }
+  return out;
+}
+
+function polySub(p, q) {
+  const out = polyClone(p);
+  for (const [e, c] of q.entries()) {
+    out.set(e, out.has(e) ? ratSub(out.get(e), c) : ratSub(rat(0,1), c));
+    if (ratIsZero(out.get(e))) out.delete(e);
+  }
+  return out;
+}
+
+function polyMul(p, q) {
+  const out = polyEmpty();
+  for (const [e1, c1] of p.entries()) {
+    for (const [e2, c2] of q.entries()) {
+      const e = e1 + e2;
+      const prod = ratMul(c1, c2);
+      out.set(e, out.has(e) ? ratAdd(out.get(e), prod) : prod);
+      if (ratIsZero(out.get(e))) out.delete(e);
+    }
+  }
+  return out;
+}
+
+function polyFromTerms(terms) {
+  // terms: [{coef:{num,den}, exp:int}, ...]
+  const p = polyEmpty();
+  for (const t of terms) {
+    const e = t.exp;
+    const c = t.coef;
+    p.set(e, p.has(e) ? ratAdd(p.get(e), c) : { ...c });
+    if (ratIsZero(p.get(e))) p.delete(e);
+  }
+  return p;
+}
+
+function ratToStrAbs(r) {
+  const n = Math.abs(r.num);
+  const d = r.den;
+  return d === 1 ? `${n}` : `${n}/${d}`;
+}
+
+function polyToString(p) {
+  if (!p || p.size === 0) return "0";
+
+  const exps = [...p.keys()].sort((a, b) => b - a);
+  let s = "";
+
+  for (const e of exps) {
+    const c = p.get(e);
+    if (!c || ratIsZero(c)) continue;
+
+    const sign = c.num < 0 ? "-" : "+";
+    const absStr = ratToStrAbs(c);
+
+    // coefficiente (gestione 1 / -1)
+    let coefPart = absStr;
+    const isOne = (Math.abs(c.num) === c.den);
+
+    if (e !== 0) {
+      if (isOne) coefPart = ""; // 1x^k -> x^k
+    }
+
+    // parte variabile
+    let varPart = "";
+    if (e === 0) varPart = "";
+    else if (e === 1) varPart = "x";
+    else varPart = `x^${e}`;
+
+    const term = (e === 0)
+      ? `${coefPart}`
+      : `${coefPart}${varPart}`;
+
+    if (!s) {
+      // primo termine: niente "+" davanti
+      s = (sign === "-") ? `-${term}` : `${term}`;
+      if (s === "" || s === "-") s += "1"; // sicurezza
+    } else {
+      s += ` ${sign} ${term}`;
+    }
+  }
+
+  return s || "0";
+}
+
+function parseRational(str) {
+  // accetta: "3", "-2", "3/4", "-3/4", "2.5" (convertito a frazione /1000)
+  if (!str) return null;
+  str = str.trim();
+  if (!str) return null;
+
+  if (str.includes("/")) {
+    const [a, b] = str.split("/");
+    const num = parseInt(a, 10);
+    const den = parseInt(b, 10);
+    if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) return null;
+    return rat(num, den);
+  }
+
+  // decimali -> frazione con /1000
+  const val = Number(str.replace(",", "."));
+  if (!Number.isFinite(val)) return null;
+  const scaled = Math.round(val * 1000);
+  return rat(scaled, 1000);
+}
+
+function parsePolynomial(input) {
+  // input esempi: 3x^2-2x+1, -x^3+x-5, 1/2x^2+3/4x-2
+  if (!input) return null;
+  let s = input.toLowerCase().trim();
+  if (!s) return null;
+
+  // normalizza: rimuove spazi
+  s = s.replace(/\s+/g, "");
+
+  // consenti "*" (opzionale) tipo 2*x -> 2x
+  s = s.replace(/\*/g, "");
+
+  // validazione base caratteri
+  if (!/^[0-9x+\-^\/\.,]+$/.test(s)) return null;
+
+  // spezza in termini mantenendo il segno
+  const parts = s.match(/[+\-]?[^+\-]+/g);
+  if (!parts) return null;
+
+  const terms = [];
+
+  for (let part of parts) {
+    if (!part) continue;
+
+    let sign = 1;
+    if (part[0] === "+") part = part.slice(1);
+    else if (part[0] === "-") { sign = -1; part = part.slice(1); }
+
+    if (!part) return null;
+
+    const hasX = part.includes("x");
+    let coefStr = "";
+    let exp = 0;
+
+    if (!hasX) {
+      coefStr = part;     // costante
+      exp = 0;
+    } else {
+      const [beforeX, afterX = ""] = part.split("x");
+      coefStr = beforeX;
+
+      if (coefStr === "") coefStr = "1"; // "x" -> 1x
+      // esponente
+      if (afterX === "") exp = 1;
+      else if (afterX.startsWith("^")) {
+        exp = parseInt(afterX.slice(1), 10);
+        if (!Number.isFinite(exp)) return null;
+      } else {
+        return null;
+      }
+    }
+
+    const coef = parseRational(coefStr);
+    if (!coef) return null;
+
+    const signedCoef = rat(coef.num * sign, coef.den);
+    terms.push({ coef: signedCoef, exp });
+  }
+
+  return polyFromTerms(terms);
+}
+
+function samePolynomial(a, b) {
+  if (!a || !b) return false;
+
+  // confronta tutte le potenze presenti
+  const exps = new Set([...a.keys(), ...b.keys()]);
+  for (const e of exps) {
+    const ca = a.get(e) || rat(0, 1);
+    const cb = b.get(e) || rat(0, 1);
+    if (!ratEq(ca, cb)) return false;
+  }
+  return true;
+}
+
+function rndCoef() {
+  // evita 0 troppo spesso
+  const x = rInt(-9, 9);
+  return x === 0 ? 1 : x;
+}
+
+function randomPoly(maxDeg = 3, maxTerms = 3) {
+  const used = new Set();
+  const nTerms = rInt(2, maxTerms);
+  const terms = [];
+
+  for (let i = 0; i < nTerms; i++) {
+    let e = rInt(0, maxDeg);
+    let guard = 0;
+    while (used.has(e) && guard++ < 10) e = rInt(0, maxDeg);
+    used.add(e);
+
+    // a volte frazioni semplici
+    const makeFrac = rInt(1, 6) === 1;
+    let c;
+    if (makeFrac) {
+      const num = rndCoef();
+      const den = rInt(2, 6);
+      c = rat(num, den);
+    } else {
+      c = rat(rndCoef(), 1);
+    }
+    terms.push({ coef: c, exp: e });
+  }
+
+  // assicurati che ci sia almeno un termine non nullo
+  return polyFromTerms(terms);
+}
+
+function nuovaEspressione() {
+  const tipo = rInt(1, 6);
+
+  const P = randomPoly(3, 3);
+  const Q = randomPoly(2, 3);
+  const R = randomPoly(1, 2);
+
+  let expr = "";
+  let sol = polyEmpty();
+
+  switch (tipo) {
+    case 1: {
+      expr = `( ${polyToString(P)} ) + ( ${polyToString(Q)} )`;
+      sol = polyAdd(P, Q);
       break;
     }
-    case 9: {
-      const a=c(), b=rInt(2,9), cc=c(), d=rInt(2,9);
-      const m=e(), n=e();
-      expr = `( (${a}/${b})x^${m} ) ÷ ( (${cc}/${d})x^${n} )`;
-      sol = monoDiv(mono(a,b,m), mono(cc,d,n));
+    case 2: {
+      expr = `( ${polyToString(P)} ) − ( ${polyToString(Q)} )`;
+      sol = polySub(P, Q);
       break;
     }
-    case 10: {
-      const a=c(), b=c();
-      const m=rInt(1,3), n=e();
-      expr = `( ${a}x^${m} )^3 ÷ ( ${b}x^${n} )`;
-      sol = monoDiv(monoPow(M(a,m),3), M(b,n));
+    case 3: {
+      expr = `( ${polyToString(P)} ) · ( ${polyToString(Q)} )`;
+      sol = polyMul(P, Q);
       break;
     }
-    case 11: {
-      const a=c(), m=e();
-      expr = `√(${a*a}) · x^${m}`;
-      sol = M(a,m);
+    case 4: {
+      expr = `( ${polyToString(P)} ) + ( ${polyToString(Q)} ) − ( ${polyToString(R)} )`;
+      sol = polySub(polyAdd(P, Q), R);
       break;
     }
-    case 12: {
-      const a=c(), b=c(), cc=c();
-      const m=e(), n=e();
-      expr = `( ${a}x^${m} · ${b}x^${n} ) + ( ${cc}x^${m+n} )`;
-      sol = M(a*b + cc, m+n);
+    case 5: {
+      // distributiva: P*(Q+R)
+      expr = `( ${polyToString(P)} ) · ( ${polyToString(Q)} + ${polyToString(R)} )`;
+      sol = polyMul(P, polyAdd(Q, R));
+      break;
+    }
+    case 6: {
+      // prodotto notevole semplice: (ax + b)(cx + d) con max grado 1
+      const A = randomPoly(1, 2);
+      const B = randomPoly(1, 2);
+      expr = `( ${polyToString(A)} ) · ( ${polyToString(B)} )`;
+      sol = polyMul(A, B);
       break;
     }
   }
 
-  soluzioneMath = sol;
+  soluzionePoly = sol;
   safeGet("mathExpr").textContent = expr;
   safeGet("mathAns").value = "";
   safeGet("mathOut").textContent =
-    "Scrivi il monomio semplificato (es: 6x^4, -3/2x^2, 5x, 12).";
+    "Scrivi il polinomio semplificato (es: 3x^2-2x+1, -x^3+x-5, 1/2x^2+3/4x-2).";
 }
 
 function checkMath() {
-  const user = parseUserMonomial(safeGet("mathAns").value);
+  const user = parsePolynomial(safeGet("mathAns").value);
+
   if (!user) {
     safeGet("mathOut").textContent =
-      "Risposta non valida. Esempi: 6x^4, -3/2x^2, 5x, 12.";
+      "Risposta non valida.\nEsempi: 3x^2-2x+1, -x^3+x-5, 1/2x^2+3/4x-2.\nUsa x e x^n, niente parentesi.";
     return;
   }
-  if (sameMonomial(user, soluzioneMath)) {
+
+  if (samePolynomial(user, soluzionePoly)) {
     safeGet("mathOut").textContent = "✅ Corretto!";
   } else {
     safeGet("mathOut").textContent =
-      `❌ Sbagliato\nRisposta corretta: ${monoToAnswer(soluzioneMath)}`;
+      `❌ Sbagliato\nRisposta corretta: ${polyToString(soluzionePoly)}`;
   }
 }
-
 // ======================
 // GEOMETRIA
 // ======================
@@ -1038,6 +1313,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
