@@ -507,63 +507,90 @@ function checkMath() {
 }
 
 // ======================
-// GEOMETRIA
+// GEOMETRIA (ESERCIZI da geo.json)
+// Casuale senza ripetizioni
 // ======================
-let soluzioneGeo = 0;
+let GEO_BANK = [];
+let geoDeck = [];
+let geoIdx = 0;
+let geoCurrent = null;
 
-function rnd05(min, max) {
-  return Math.round((Math.random() * (max - min) + min) * 2) / 2;
+function buildGeoDeck() {
+  geoDeck = shuffleCopy(GEO_BANK);
+  geoIdx = 0;
+}
+
+async function caricaGeoBank() {
+  const out = safeGet("geoOut");
+  try {
+    const r = await fetch("geo.json", { cache: "no-store" });
+    const data = await r.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      GEO_BANK = [];
+      geoDeck = [];
+      geoIdx = 0;
+      if (out) out.textContent = "Errore nel caricamento degli esercizi.";
+      return false;
+    }
+
+    GEO_BANK = data.filter(x => x && typeof x.q === "string" && typeof x.a === "number");
+    if (!GEO_BANK.length) {
+      geoDeck = [];
+      geoIdx = 0;
+      if (out) out.textContent = "Errore nel caricamento degli esercizi.";
+      return false;
+    }
+
+    buildGeoDeck();
+    return true;
+  } catch {
+    GEO_BANK = [];
+    geoDeck = [];
+    geoIdx = 0;
+    if (out) out.textContent = "Errore nel caricamento degli esercizi.";
+    return false;
+  }
 }
 
 function nuovoProblemaGeo() {
-  const tipo = rInt(1, 9);
-  let testo = "";
-  let sol = 0;
+  const out = safeGet("geoOut");
 
-  const b = rnd05(4, 20);
-  const h = rnd05(4, 20);
-  const l = rnd05(4, 20);
-  const r = rnd05(3, 15);
-  const d1 = rnd05(4, 20);
-  const d2 = rnd05(4, 20);
-  const pi = 3.14;
-
-  switch (tipo) {
-    case 1: testo = `Un quadrato ha lato ${l} cm.\nQual è la sua area?`; sol = l*l; break;
-    case 2: testo = `Un quadrato ha lato ${l} cm.\nQual è il suo perimetro?`; sol = 4*l; break;
-    case 3: testo = `Un rettangolo ha base ${b} cm e altezza ${h} cm.\nQual è la sua area?`; sol = b*h; break;
-    case 4: {
-      const area = Math.round((b*h)*2)/2;
-      testo = `Un rettangolo ha area ${area} cm² e altezza ${h} cm.\nQual è la base?`;
-      sol = b;
-      break;
-    }
-    case 5: testo = `Un parallelogramma ha base ${b} cm e altezza ${h} cm.\nQual è la sua area?`; sol = b*h; break;
-    case 6: testo = `Un rombo ha diagonali ${d1} cm e ${d2} cm.\nQual è la sua area?`; sol = (d1*d2)/2; break;
-    case 7: testo = `Un triangolo ha base ${b} cm e altezza ${h} cm.\nQual è la sua area?`; sol = (b*h)/2; break;
-    case 8: testo = `Un cerchio ha raggio ${r} cm.\nQual è la sua area? (usa π = 3.14)`; sol = pi*r*r; break;
-    case 9: testo = `Un cerchio ha raggio ${r} cm.\nQual è la sua circonferenza? (usa π = 3.14)`; sol = 2*pi*r; break;
+  if (!GEO_BANK.length) {
+    if (out) out.textContent = "Carico gli esercizi...";
+    caricaGeoBank().then(ok => { if (ok) nuovoProblemaGeo(); });
+    return;
   }
 
-  soluzioneGeo = Math.round(sol * 2) / 2;
-  safeGet("geoText").textContent = testo;
+  if (!geoDeck.length || geoIdx >= geoDeck.length) buildGeoDeck();
+
+  geoCurrent = geoDeck[geoIdx++];
+
+  safeGet("geoText").textContent = geoCurrent.q ?? "";
   safeGet("geoAns").value = "";
-  safeGet("geoOut").textContent = "";
+  if (out) out.textContent = `Esercizio ${geoIdx}/${geoDeck.length}`;
 }
 
 function checkGeo() {
-  const raw = safeGet("geoAns").value.trim().replace(",", ".");
-  const n = parseFloat(raw);
-  if (Number.isNaN(n)) {
-    safeGet("geoOut").textContent = "Inserisci un numero valido.";
+  const out = safeGet("geoOut");
+  if (!geoCurrent) {
+    if (out) out.textContent = "Premi “Nuovo” per iniziare.";
     return;
   }
-  if (Math.abs(n - soluzioneGeo) <= 0.9) {
-    safeGet("geoOut").textContent = "✅ Corretto!";
-  } else {
-    safeGet("geoOut").textContent =
-      `❌ Sbagliato\nRisultato corretto: ${soluzioneGeo}`;
+
+  const raw = safeGet("geoAns").value.trim().replace(",", ".");
+  const n = parseFloat(raw);
+
+  if (Number.isNaN(n)) {
+    out.textContent = "Inserisci un numero valido.";
+    return;
   }
+
+  const ok = Math.abs(n - geoCurrent.a) <= 0.5;
+
+  out.textContent = ok
+    ? "✅ Corretto!"
+    : `❌ Sbagliato\nRisultato corretto: ${geoCurrent.a}`;
 }
 
 // ======================
@@ -1031,6 +1058,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
