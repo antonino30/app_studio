@@ -1,14 +1,14 @@
 [
   {
-    "q": "Un rettangolo ha base 8 cm e altezza 5 cm. Calcola l’area.",
-    "a": 40
+    "q": "Piramide esagonale: a=16cm sb=10cm At=?",
+    "a": 739,8
   },
-  {
-    "q": "Un triangolo ha base 10 cm e altezza 6 cm. Calcola l’area.",
-    "a": 30
+   {
+    "q": "Piramide quadrangolare: Al=2340cm^2 sb=30cm hpiramide=?",
+    "a": 36
   },
-  {
-    "q": "Un cerchio ha raggio 4 cm. Calcola l’area (usa π = 3.14).",
-    "a": 50.24
+   {
+    "q": "Piramide quadrangolare: somma spigoli=176cm sl=5/6sb At=?",
+    "a": 1344
   }
 ]
