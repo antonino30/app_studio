@@ -10,18 +10,5 @@
   {
     "q": "Un cerchio ha raggio 4 cm. Calcola l’area (usa π = 3.14).",
     "a": 50.24
-  },
-[
-  {
-    "q": "Un rettangolo ha base 8 cm e altezza 5 cm. Calcola l’area.",
-    "a": 40
-  },
-  {
-    "q": "Un triangolo ha base 10 cm e altezza 6 cm. Calcola l’area.",
-    "a": 30
-  },
-  {
-    "q": "Un cerchio ha raggio 4 cm. Calcola l’area (usa π = 3.14).",
-    "a": 50.24
   }
 ]
