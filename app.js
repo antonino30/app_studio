@@ -972,10 +972,11 @@ document.addEventListener("DOMContentLoaded", () => {
     nuovoProblemaTec();
   });
 
-  onClick("goGeo", () => {
-    showScreen("geo");
-    nuovoProblemaGeo();
-  });
+  onClick("goGeo", async () => {
+  showScreen("geo");
+  if (!GEO_BANK.length) await caricaGeoBank();
+  nuovoProblemaGeo();
+});
 
   onClick("goGeog", () => {
     showScreen("geog");
@@ -1058,6 +1059,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
