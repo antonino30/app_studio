@@ -534,7 +534,13 @@ async function caricaGeoBank() {
       return false;
     }
 
-    GEO_BANK = data.filter(x => x && typeof x.q === "string" && typeof x.a === "number");
+    // accetta a come numero o stringa
+    GEO_BANK = data.filter(x =>
+      x &&
+      typeof x.q === "string" &&
+      (typeof x.a === "number" || typeof x.a === "string")
+    );
+
     if (!GEO_BANK.length) {
       geoDeck = [];
       geoIdx = 0;
@@ -571,6 +577,26 @@ function nuovoProblemaGeo() {
   if (out) out.textContent = `Esercizio ${geoIdx}/${geoDeck.length}`;
 }
 
+function parseGeoAnswer(raw) {
+  const s = (raw ?? "").toString().trim().replace(/\s+/g, "").replace(/,/g, ".");
+  if (!s) return null;
+
+  // caso "A/B"
+  if (s.includes("/")) {
+    const parts = s.split("/");
+    if (parts.length !== 2) return null;
+    const n1 = parseFloat(parts[0]);
+    const n2 = parseFloat(parts[1]);
+    if (!Number.isFinite(n1) || !Number.isFinite(n2)) return null;
+    return { kind: "pair", v1: n1, v2: n2 };
+  }
+
+  // caso numero singolo
+  const n = parseFloat(s);
+  if (!Number.isFinite(n)) return null;
+  return { kind: "num", v: n };
+}
+
 function checkGeo() {
   const out = safeGet("geoOut");
   if (!geoCurrent) {
@@ -578,15 +604,29 @@ function checkGeo() {
     return;
   }
 
-  const raw = safeGet("geoAns").value.trim().replace(",", ".");
-  const n = parseFloat(raw);
-
-  if (Number.isNaN(n)) {
-    out.textContent = "Inserisci un numero valido.";
+  const userParsed = parseGeoAnswer(safeGet("geoAns").value);
+  if (!userParsed) {
+    out.textContent = "Inserisci una risposta valida.";
     return;
   }
 
-  const ok = Math.abs(n - geoCurrent.a) <= 0.5;
+  const solRaw = geoCurrent.a;
+  const solParsed = parseGeoAnswer(solRaw);
+
+  // tolleranza
+  const tol = 0.5;
+
+  let ok = false;
+
+  if (solParsed?.kind === "num" && userParsed.kind === "num") {
+    ok = Math.abs(userParsed.v - solParsed.v) <= tol;
+  } else if (solParsed?.kind === "pair" && userParsed.kind === "pair") {
+    ok =
+      Math.abs(userParsed.v1 - solParsed.v1) <= tol &&
+      Math.abs(userParsed.v2 - solParsed.v2) <= tol;
+  } else {
+    ok = false;
+  }
 
   out.textContent = ok
     ? "✅ Corretto!"
@@ -1059,6 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ok) nextBranoMus();
   });
 });
+
 
 
 
